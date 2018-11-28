@@ -1,0 +1,5 @@
+- building Agda's AST from Haskell definition:
+
+make PATHTOAGDASOURCES=<path to Agda source code directory>
+
+(tested with Agda-2.6.0.0 on commit a9d4392fa13efb63e886a3bbf8df59fbdde74d15)
