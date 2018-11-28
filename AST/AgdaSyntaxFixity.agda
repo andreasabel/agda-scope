@@ -18,12 +18,12 @@ mutual
     UnrelatedC : PrecedenceLevel 
     RelatedC : Integer → PrecedenceLevel 
 
-{-# FOREIGN GHC Associativity = Associativity ( NonAssocC | LeftAssocC | RightAssocC ) #-}
+{-# COMPILE GHC Associativity = data Associativity ( NonAssocC | LeftAssocC | RightAssocC ) #-}
 
-{-# FOREIGN GHC Fixity = Fixity ( FixityC ) #-}
+{-# COMPILE GHC Fixity = data Fixity ( FixityC ) #-}
 
-{-# FOREIGN GHC FixityP = FixityP ( FixityPC ) #-}
+{-# COMPILE GHC FixityP = data FixityP ( FixityPC ) #-}
 
-{-# FOREIGN GHC PrecedenceLevel = PrecedenceLevel ( UnrelatedC | RelatedC ) #-}
+{-# COMPILE GHC PrecedenceLevel = data PrecedenceLevel ( UnrelatedC | RelatedC ) #-}
 
  

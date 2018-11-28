@@ -15,6 +15,6 @@ mutual
   Prefix :  Set
   Prefix  = Int
 
-{-# FOREIGN GHC IntSet = IntSet ( BinC | TipC | NilC ) #-}
+{-# COMPILE GHC IntSet = data IntSet ( BinC | TipC | NilC ) #-}
 
  

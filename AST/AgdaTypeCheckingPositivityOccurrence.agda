@@ -9,6 +9,6 @@ mutual
     GuardPosC : Occurrence 
     UnusedC : Occurrence 
 
-{-# FOREIGN GHC Occurrence = Occurrence ( MixedC | JustNegC | JustPosC | StrictPosC | GuardPosC | UnusedC ) #-}
+{-# COMPILE GHC Occurrence = data Occurrence ( MixedC | JustNegC | JustPosC | StrictPosC | GuardPosC | UnusedC ) #-}
 
  

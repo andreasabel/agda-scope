@@ -18,6 +18,6 @@ mutual
     LitQNameC : Range → QName → Literal 
     LitMetaC : Range → AbsolutePath → MetaId → Literal 
 
-{-# FOREIGN GHC Literal = Literal ( LitNatC | LitWord64C | LitFloatC | LitStringC | LitCharC | LitQNameC | LitMetaC ) #-}
+{-# COMPILE GHC Literal = data Literal ( LitNatC | LitWord64C | LitFloatC | LitStringC | LitCharC | LitQNameC | LitMetaC ) #-}
 
  

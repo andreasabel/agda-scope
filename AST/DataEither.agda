@@ -5,6 +5,6 @@ mutual
     LeftC : a → Either a b
     RightC : b → Either a b
 
-{-# FOREIGN GHC Either = Either ( LeftC | RightC ) #-}
+{-# COMPILE GHC Either = data Either ( LeftC | RightC ) #-}
 
  

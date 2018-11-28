@@ -8,6 +8,6 @@ mutual
   Size :  Set
   Size  = Int
 
-{-# FOREIGN GHC SSet = SSet ( BinC | TipC ) #-}
+{-# COMPILE GHC SSet = data SSet ( BinC | TipC ) #-}
 
  

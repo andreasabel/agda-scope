@@ -4,6 +4,6 @@ mutual
   data Array : Set where
     ArrayC : ByteArray# → Array 
 
-{-# FOREIGN GHC Array = Array ( ArrayC ) #-}
+{-# COMPILE GHC Array = data Array ( ArrayC ) #-}
 
  

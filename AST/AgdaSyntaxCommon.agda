@@ -124,54 +124,54 @@ mutual
   data WithHiding ( a : Set ) : Set where
     WithHidingC : Hiding → a → WithHiding a
 
-{-# FOREIGN GHC Access = Access ( PrivateAccessC | PublicAccessC | OnlyQualifiedC ) #-}
+{-# COMPILE GHC Access = data Access ( PrivateAccessC | PublicAccessC | OnlyQualifiedC ) #-}
 
-{-# FOREIGN GHC Arg = Arg ( ArgC ) #-}
+{-# COMPILE GHC Arg = data Arg ( ArgC ) #-}
 
-{-# FOREIGN GHC ArgInfo = ArgInfo ( ArgInfoC ) #-}
+{-# COMPILE GHC ArgInfo = data ArgInfo ( ArgInfoC ) #-}
 
-{-# FOREIGN GHC FreeVariables = FreeVariables ( UnknownFVsC | KnownFVsC ) #-}
+{-# COMPILE GHC FreeVariables = data FreeVariables ( UnknownFVsC | KnownFVsC ) #-}
 
-{-# FOREIGN GHC HasEta = HasEta ( NoEtaC | YesEtaC ) #-}
+{-# COMPILE GHC HasEta = data HasEta ( NoEtaC | YesEtaC ) #-}
 
-{-# FOREIGN GHC Hiding = Hiding ( HiddenC | InstanceC | NotHiddenC ) #-}
+{-# COMPILE GHC Hiding = data Hiding ( HiddenC | InstanceC | NotHiddenC ) #-}
 
-{-# FOREIGN GHC ImportDirectiveP = ImportDirectiveP ( ImportDirectiveC ) #-}
+{-# COMPILE GHC ImportDirectiveP = data ImportDirectiveP ( ImportDirectiveC ) #-}
 
-{-# FOREIGN GHC ImportedNameP = ImportedNameP ( ImportedModuleC | ImportedNameC ) #-}
+{-# COMPILE GHC ImportedNameP = data ImportedNameP ( ImportedModuleC | ImportedNameC ) #-}
 
-{-# FOREIGN GHC Induction = Induction ( InductiveC | CoInductiveC ) #-}
+{-# COMPILE GHC Induction = data Induction ( InductiveC | CoInductiveC ) #-}
 
-{-# FOREIGN GHC IsInstance = IsInstance ( InstanceDefC | NotInstanceDefC ) #-}
+{-# COMPILE GHC IsInstance = data IsInstance ( InstanceDefC | NotInstanceDefC ) #-}
 
-{-# FOREIGN GHC MaybePlaceholder = MaybePlaceholder ( PlaceholderC | NoPlaceholderC ) #-}
+{-# COMPILE GHC MaybePlaceholder = data MaybePlaceholder ( PlaceholderC | NoPlaceholderC ) #-}
 
-{-# FOREIGN GHC MetaId = MetaId ( MetaIdC ) #-}
+{-# COMPILE GHC MetaId = data MetaId ( MetaIdC ) #-}
 
-{-# FOREIGN GHC Modality = Modality ( ModalityC ) #-}
+{-# COMPILE GHC Modality = data Modality ( ModalityC ) #-}
 
-{-# FOREIGN GHC NameId = NameId ( NameIdC ) #-}
+{-# COMPILE GHC NameId = data NameId ( NameIdC ) #-}
 
-{-# FOREIGN GHC Named = Named ( NamedC ) #-}
+{-# COMPILE GHC Named = data Named ( NamedC ) #-}
 
-{-# FOREIGN GHC Origin = Origin ( UserWrittenC | InsertedC | ReflectedC | CaseSplitC | SubstitutionC ) #-}
+{-# COMPILE GHC Origin = data Origin ( UserWrittenC | InsertedC | ReflectedC | CaseSplitC | SubstitutionC ) #-}
 
-{-# FOREIGN GHC Overlappable = Overlappable ( YesOverlapC | NoOverlapC ) #-}
+{-# COMPILE GHC Overlappable = data Overlappable ( YesOverlapC | NoOverlapC ) #-}
 
-{-# FOREIGN GHC PositionInName = PositionInName ( BeginningC | MiddleC | EndC ) #-}
+{-# COMPILE GHC PositionInName = data PositionInName ( BeginningC | MiddleC | EndC ) #-}
 
-{-# FOREIGN GHC Quantity = Quantity ( Quantity0C | Quantity1C | QuantityωC ) #-}
+{-# COMPILE GHC Quantity = data Quantity ( Quantity0C | Quantity1C | QuantityωC ) #-}
 
-{-# FOREIGN GHC Ranged = Ranged ( RangedC ) #-}
+{-# COMPILE GHC Ranged = data Ranged ( RangedC ) #-}
 
-{-# FOREIGN GHC Relevance = Relevance ( RelevantC | NonStrictC | IrrelevantC ) #-}
+{-# COMPILE GHC Relevance = data Relevance ( RelevantC | NonStrictC | IrrelevantC ) #-}
 
-{-# FOREIGN GHC RenamingP = RenamingP ( RenamingC ) #-}
+{-# COMPILE GHC RenamingP = data RenamingP ( RenamingC ) #-}
 
-{-# FOREIGN GHC TerminationCheck = TerminationCheck ( TerminationCheckC | NoTerminationCheckC | NonTerminatingC | TerminatingC | TerminationMeasureC ) #-}
+{-# COMPILE GHC TerminationCheck = data TerminationCheck ( TerminationCheckC | NoTerminationCheckC | NonTerminatingC | TerminatingC | TerminationMeasureC ) #-}
 
-{-# FOREIGN GHC UsingP = UsingP ( UseEverythingC | UsingC ) #-}
+{-# COMPILE GHC UsingP = data UsingP ( UseEverythingC | UsingC ) #-}
 
-{-# FOREIGN GHC WithHiding = WithHiding ( WithHidingC ) #-}
+{-# COMPILE GHC WithHiding = data WithHiding ( WithHidingC ) #-}
 
  

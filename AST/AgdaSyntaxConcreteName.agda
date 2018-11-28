@@ -15,10 +15,10 @@ mutual
     QualC : Name → QName → QName 
     QNameC : Name → QName 
 
-{-# FOREIGN GHC Name = Name ( NameC | NoNameC ) #-}
+{-# COMPILE GHC Name = data Name ( NameC | NoNameC ) #-}
 
-{-# FOREIGN GHC NamePart = NamePart ( HoleC | IdC ) #-}
+{-# COMPILE GHC NamePart = data NamePart ( HoleC | IdC ) #-}
 
-{-# FOREIGN GHC QName = QName ( QualC | QNameC ) #-}
+{-# COMPILE GHC QName = data QName ( QualC | QNameC ) #-}
 
  

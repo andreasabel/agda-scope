@@ -94,7 +94,7 @@ render x = intercalate "\n\n" $ map renderAgD $ DS.toList x
 
 killdots = filter (\x -> not ((==) '.' x))
 
-renderPragma (AgD {..}) = ("{-# FOREIGN GHC "++ (fixNames $ tshow agdName) ++ " = " ++ (fixNames $ tshow agdName) ++ " ( " ++ (intercalate " | " $ map ((flip (++) "C") . tshow . agcName) agdCons) ++ " ) #-}")
+renderPragma (AgD {..}) = ("{-# COMPILE GHC "++ (fixNames $ tshow agdName) ++ " = data " ++ (fixNames $ tshow agdName) ++ " ( " ++ (intercalate " | " $ map ((flip (++) "C") . tshow . agcName) agdCons) ++ " ) #-}")
 renderPragma (AgT {..}) = ""
 
 renderModule :: Module AgD -> String

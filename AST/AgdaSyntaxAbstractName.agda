@@ -1,7 +1,7 @@
 module AST.AgdaSyntaxAbstractName where
 open import Data.List
 open import AST.AgdaSyntaxCommon
-import AST.AgdaSyntaxConcreteName
+open import AST.AgdaSyntaxConcreteName
 open import AST.AgdaSyntaxFixity
 open import AST.AgdaSyntaxPosition
 mutual
@@ -14,10 +14,10 @@ mutual
   data QName : Set where
     QNameC : ModuleName → Name → QName 
 
-{-# FOREIGN GHC ModuleName = ModuleName ( MNameC ) #-}
+{-# COMPILE GHC ModuleName = data ModuleName ( MNameC ) #-}
 
-{-# FOREIGN GHC Name = Name ( NameC ) #-}
+{-# COMPILE GHC Name = data Name ( NameC ) #-}
 
-{-# FOREIGN GHC QName = QName ( QNameC ) #-}
+{-# COMPILE GHC QName = data QName ( QNameC ) #-}
 
  

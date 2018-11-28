@@ -5,5 +5,5 @@ mutual
   data Text : Set where
     TextC : Array → Int → Int → Text 
 
-{-# FOREIGN GHC Text = Text ( TextC ) #-}
+{-# COMPILE GHC Text = data Text ( TextC ) #-}
 

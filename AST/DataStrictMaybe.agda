@@ -5,6 +5,6 @@ mutual
     NothingC : Maybe a
     JustC : a → Maybe a
 
-{-# FOREIGN GHC Maybe = Maybe ( NothingC | JustC ) #-}
+{-# COMPILE GHC Maybe = data Maybe ( NothingC | JustC ) #-}
 
  

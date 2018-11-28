@@ -24,10 +24,10 @@ mutual
   SrcFile :  Set
   SrcFile  = (Maybe  AbsolutePath)
 
-{-# FOREIGN GHC IntervalP = IntervalP ( IntervalC ) #-}
+{-# COMPILE GHC IntervalP = data IntervalP ( IntervalC ) #-}
 
-{-# FOREIGN GHC PositionP = PositionP ( PnC ) #-}
+{-# COMPILE GHC PositionP = data PositionP ( PnC ) #-}
 
-{-# FOREIGN GHC RangeP = RangeP ( NoRangeC | RangeC ) #-}
+{-# COMPILE GHC RangeP = data RangeP ( NoRangeC | RangeC ) #-}
 
  

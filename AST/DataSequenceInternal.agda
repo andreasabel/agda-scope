@@ -22,14 +22,14 @@ mutual
   data Seq ( a : Set ) : Set where
     SeqC : (FingerTree  (Elem  a)) → Seq a
 
-{-# FOREIGN GHC Digit = Digit ( OneC | TwoC | ThreeC | FourC ) #-}
+{-# COMPILE GHC Digit = data Digit ( OneC | TwoC | ThreeC | FourC ) #-}
 
-{-# FOREIGN GHC Elem = Elem ( ElemC ) #-}
+{-# COMPILE GHC Elem = data Elem ( ElemC ) #-}
 
-{-# FOREIGN GHC FingerTree = FingerTree ( EmptyTC | SingleC | DeepC ) #-}
+{-# COMPILE GHC FingerTree = data FingerTree ( EmptyTC | SingleC | DeepC ) #-}
 
-{-# FOREIGN GHC Node = Node ( Node2C | Node3C ) #-}
+{-# COMPILE GHC Node = data Node ( Node2C | Node3C ) #-}
 
-{-# FOREIGN GHC Seq = Seq ( SeqC ) #-}
+{-# COMPILE GHC Seq = data Seq ( SeqC ) #-}
 
  

@@ -231,42 +231,42 @@ mutual
   WithExpr :  Set
   WithExpr  = Expr
 
-{-# FOREIGN GHC AsNameP = AsNameP ( AsNameC ) #-}
+{-# COMPILE GHC AsNameP = data AsNameP ( AsNameC ) #-}
 
-{-# FOREIGN GHC BoundName = BoundName ( BNameC ) #-}
+{-# COMPILE GHC BoundName = data BoundName ( BNameC ) #-}
 
-{-# FOREIGN GHC Declaration = Declaration ( TypeSigC | GeneralizeC | FieldC | FunClauseC | DataSigC | DataC | RecordSigC | RecordC | InfixC | SyntaxC | PatternSynC | MutualC | AbstractC | PrivateC | InstanceBC | MacroC | PostulateC | PrimitiveC | OpenC | ImportC | ModuleMacroC | ModuleC | UnquoteDeclC | UnquoteDefC | PragmaC ) #-}
+{-# COMPILE GHC Declaration = data Declaration ( TypeSigC | GeneralizeC | FieldC | FunClauseC | DataSigC | DataC | RecordSigC | RecordC | InfixC | SyntaxC | PatternSynC | MutualC | AbstractC | PrivateC | InstanceBC | MacroC | PostulateC | PrimitiveC | OpenC | ImportC | ModuleMacroC | ModuleC | UnquoteDeclC | UnquoteDefC | PragmaC ) #-}
 
-{-# FOREIGN GHC DoStmt = DoStmt ( DoBindC | DoThenC | DoLetC ) #-}
+{-# COMPILE GHC DoStmt = data DoStmt ( DoBindC | DoThenC | DoLetC ) #-}
 
-{-# FOREIGN GHC Expr = Expr ( IdentC | LitC | QuestionMarkC | UnderscoreC | RawAppC | AppC | OpAppC | WithAppC | HiddenArgC | InstanceArgC | LamC | AbsurdLamC | ExtendedLamC | FunC | PiC | SetC | PropC | SetNC | PropNC | RecC | RecUpdateC | LetC | ParenC | IdiomBracketsC | DoBlockC | AbsurdC | AsC | DotC | ETelC | QuoteGoalC | QuoteContextC | QuoteC | QuoteTermC | TacticC | UnquoteC | DontCareC | EqualC | EllipsisC | GeneralizedC ) #-}
+{-# COMPILE GHC Expr = data Expr ( IdentC | LitC | QuestionMarkC | UnderscoreC | RawAppC | AppC | OpAppC | WithAppC | HiddenArgC | InstanceArgC | LamC | AbsurdLamC | ExtendedLamC | FunC | PiC | SetC | PropC | SetNC | PropNC | RecC | RecUpdateC | LetC | ParenC | IdiomBracketsC | DoBlockC | AbsurdC | AsC | DotC | ETelC | QuoteGoalC | QuoteContextC | QuoteC | QuoteTermC | TacticC | UnquoteC | DontCareC | EqualC | EllipsisC | GeneralizedC ) #-}
 
-{-# FOREIGN GHC FieldAssignmentP = FieldAssignmentP ( FieldAssignmentC ) #-}
+{-# COMPILE GHC FieldAssignmentP = data FieldAssignmentP ( FieldAssignmentC ) #-}
 
-{-# FOREIGN GHC LHS = LHS ( LHSC ) #-}
+{-# COMPILE GHC LHS = data LHS ( LHSC ) #-}
 
-{-# FOREIGN GHC LamBindingP = LamBindingP ( DomainFreeC | DomainFullC ) #-}
+{-# COMPILE GHC LamBindingP = data LamBindingP ( DomainFreeC | DomainFullC ) #-}
 
-{-# FOREIGN GHC LamClause = LamClause ( LamClauseC ) #-}
+{-# COMPILE GHC LamClause = data LamClause ( LamClauseC ) #-}
 
-{-# FOREIGN GHC ModuleApplication = ModuleApplication ( SectionAppC | RecordModuleIFSC ) #-}
+{-# COMPILE GHC ModuleApplication = data ModuleApplication ( SectionAppC | RecordModuleIFSC ) #-}
 
-{-# FOREIGN GHC ModuleAssignment = ModuleAssignment ( ModuleAssignmentC ) #-}
+{-# COMPILE GHC ModuleAssignment = data ModuleAssignment ( ModuleAssignmentC ) #-}
 
-{-# FOREIGN GHC OpApp = OpApp ( SyntaxBindingLambdaC | OrdinaryC ) #-}
+{-# COMPILE GHC OpApp = data OpApp ( SyntaxBindingLambdaC | OrdinaryC ) #-}
 
-{-# FOREIGN GHC OpenShortHand = OpenShortHand ( DoOpenC | DontOpenC ) #-}
+{-# COMPILE GHC OpenShortHand = data OpenShortHand ( DoOpenC | DontOpenC ) #-}
 
-{-# FOREIGN GHC Pattern = Pattern ( IdentPC | QuotePC | AppPC | RawAppPC | OpAppPC | HiddenPC | InstancePC | ParenPC | WildPC | AbsurdPC | AsPC | DotPC | LitPC | RecPC | EqualPC | EllipsisPC | WithPC ) #-}
+{-# COMPILE GHC Pattern = data Pattern ( IdentPC | QuotePC | AppPC | RawAppPC | OpAppPC | HiddenPC | InstancePC | ParenPC | WildPC | AbsurdPC | AsPC | DotPC | LitPC | RecPC | EqualPC | EllipsisPC | WithPC ) #-}
 
-{-# FOREIGN GHC Pragma = Pragma ( OptionsPragmaC | BuiltinPragmaC | RewritePragmaC | CompiledDataPragmaC | CompiledTypePragmaC | CompiledPragmaC | CompiledExportPragmaC | CompiledJSPragmaC | CompiledUHCPragmaC | CompiledDataUHCPragmaC | HaskellCodePragmaC | ForeignPragmaC | CompilePragmaC | StaticPragmaC | InlinePragmaC | ImportPragmaC | ImportUHCPragmaC | ImpossiblePragmaC | EtaPragmaC | WarningOnUsageC | InjectivePragmaC | DisplayPragmaC | CatchallPragmaC | TerminationCheckPragmaC | NoPositivityCheckPragmaC | PolarityPragmaC | NoUniverseCheckPragmaC ) #-}
+{-# COMPILE GHC Pragma = data Pragma ( OptionsPragmaC | BuiltinPragmaC | RewritePragmaC | CompiledDataPragmaC | CompiledTypePragmaC | CompiledPragmaC | CompiledExportPragmaC | CompiledJSPragmaC | CompiledUHCPragmaC | CompiledDataUHCPragmaC | HaskellCodePragmaC | ForeignPragmaC | CompilePragmaC | StaticPragmaC | InlinePragmaC | ImportPragmaC | ImportUHCPragmaC | ImpossiblePragmaC | EtaPragmaC | WarningOnUsageC | InjectivePragmaC | DisplayPragmaC | CatchallPragmaC | TerminationCheckPragmaC | NoPositivityCheckPragmaC | PolarityPragmaC | NoUniverseCheckPragmaC ) #-}
 
-{-# FOREIGN GHC RHSP = RHSP ( AbsurdRHSC | RHSC ) #-}
+{-# COMPILE GHC RHSP = data RHSP ( AbsurdRHSC | RHSC ) #-}
 
-{-# FOREIGN GHC TypedBindingP = TypedBindingP ( TBindC | TLetC ) #-}
+{-# COMPILE GHC TypedBindingP = data TypedBindingP ( TBindC | TLetC ) #-}
 
-{-# FOREIGN GHC TypedBindingsP = TypedBindingsP ( TypedBindingsC ) #-}
+{-# COMPILE GHC TypedBindingsP = data TypedBindingsP ( TypedBindingsC ) #-}
 
-{-# FOREIGN GHC WhereClauseP = WhereClauseP ( NoWhereC | AnyWhereC | SomeWhereC ) #-}
+{-# COMPILE GHC WhereClauseP = data WhereClauseP ( NoWhereC | AnyWhereC | SomeWhereC ) #-}
 
  

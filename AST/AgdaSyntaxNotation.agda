@@ -12,6 +12,6 @@ mutual
   Notation :  Set
   Notation  = (List (GenPart))
 
-{-# FOREIGN GHC GenPart = GenPart ( BindHoleC | NormalHoleC | WildHoleC | IdPartC ) #-}
+{-# COMPILE GHC GenPart = data GenPart ( BindHoleC | NormalHoleC | WildHoleC | IdPartC ) #-}
 
  
