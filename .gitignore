@@ -1,0 +1,8 @@
+*~
+*.agdai
+*.bak
+*.o
+*.hi
+MAlonzo
+/core/ModuleCalculus/
+/core/core
