@@ -12,7 +12,9 @@ Prg.  Prg ::= [Decl] ;
 -- * not sensitive to indentation, thus, braces needed for blocks
 -- * modifiers are not applied to blocks but to individual definitions.
 
-Module.  Decl ::= Mod "module" Ident [Bind] Refine "where" "{" [Decl] "}" ; -- A new parameterized module with content.
+-- Module.  Decl ::= Mod "module" Ident [Bind] Refine "where" "{" [Decl] "}" ; -- A new parameterized module with content.
+
+Module.  Decl ::= Mod "module" Ident [Bind] "where" "{" [Decl] "}" ; -- A new parameterized module with content.
 Spec.    Decl ::= Mod "module" Ident "=" QName [Inst] [Dir] ; -- A specialization of a module.
 Open.    Decl ::= "open" Ident Mod                          ; -- Importing names.  Their status is given by the modifier.
 Decl.    Decl ::= Mod Ident ":" Exp                         ; -- Declaration of symbol with visibility given by modifier.
@@ -55,13 +57,13 @@ Bind.     Bind ::= "(" Ident ":" Exp ")" ; -- Typed binding
 
 terminator Bind "" ;
 
--- Refinement of parent module parameters.
+-- -- Refinement of parent module parameters.
+--
+-- NoRefine. Refine ::=                      ; -- No refinement given.
+-- Refine.   Refine ::= "refine" [Subst]     ; -- Refine by a substitution.
+-- Subst.    Subst ::= "(" Ident "=" Exp ")" ; -- Assignment of module parameter.
 
-NoRefine. Refine ::=                      ; -- No refinement given.
-Refine.   Refine ::= "refine" [Subst]     ; -- Refine by a substitution.
-Subst.    Subst ::= "(" Ident "=" Exp ")" ; -- Assignment of module parameter.
-
-terminator Subst "" ;
+-- terminator Subst "" ;
 
 -- Parameter instantiations: lists of atomic expressions.
 

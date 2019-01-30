@@ -11,7 +11,7 @@ public module Top where {
     private module N = Top.M y p using () renaming (y to z)
     open N public
 
-    public module O refine (x = z) where {
+    public module O where {
 
       public B : Set
       def B = A
