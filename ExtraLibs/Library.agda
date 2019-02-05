@@ -46,7 +46,7 @@ open import Size public
 -- module ∃ = Data.Product -- bad idea, Agda's printer cannot deal with it
 
 module Bool where
-  open import Data.Bool.Properties public using (_≟_)
+  open import Data.Bool.Base public using (_≟_)
 
   _==_ : (b b' : Bool) → Bool
   b == b' = ⌊ b ≟ b' ⌋
@@ -131,7 +131,7 @@ module _ {a p} {A : Set a} {P : A → Set p} where
 
 -- Non-dependent association lists
 
-AssocList : ∀{a b} {A : Set a} (B : Set b) (xs : List A) → Set (b)
+AssocList : ∀{a b} {A : Set a} (B : Set b) (xs : List A) → Set (a ⊔ b)
 AssocList B xs = List.All (λ _ → B) xs
 
 module AssocList where
@@ -220,7 +220,7 @@ module AssocList where
 module List⁺ where
   open import Data.List.NonEmpty public using (toList; tail)
 
-  All : ∀{a p} {A : Set a} (P : A → Set p) → List⁺ A → Set (p)
+  All : ∀{a p} {A : Set a} (P : A → Set p) → List⁺ A → Set (a ⊔ p)
   All P xs = List.All P (toList xs)
 
 module String where

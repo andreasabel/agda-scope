@@ -22,7 +22,6 @@ import System.FilePath
 
 import Control.Monad
 
-
 type MySt = DS.Set String
 
 type MyQ a = StateT MySt Q a
@@ -44,11 +43,13 @@ prettyCustom (CustomTuple 0) = "⊥"
 prettyCustom t = error $ show ("prettyCustom",t)
 
 prettyLinearType (LinearType (CustomList) xs) = "(List (" ++ (intercalate " " $ map prettyLinearType xs) ++ "))"
-prettyLinearType (LinearType (CustomTuple 2) [x1,x2]) = "(" ++ prettyLinearType x1 ++ " ×  " ++ prettyLinearType x2 ++ ")"
+prettyLinearType (LinearType (CustomTuple 2) [x1,x2]) = "(" ++ prettyLinearType x1 ++ " ×P  " ++ prettyLinearType x2 ++ ")"
+prettyLinearType (LinearType (OrigName onam) [x1,x2]) | ((fixNames $ tshow onam) == "Either")  = "(" ++ prettyLinearType x1 ++" ⊎ "++prettyLinearType x2 ++")"
 prettyLinearType (LinearType x xs) = "(" ++ prettyCustom x ++ "  " ++ (intercalate " " $ map prettyLinearType xs) ++ ")"
 prettyLinearType (LF x) = prettyCustom x
 
-fixNames "Set" = "SSet"
+fixNames "Set" = "Sett"
+-- fixNames a | isInfixOf "Set" a = T.unpack $ T.replace (T.pack "Set") (T.pack "Sett") (T.pack a)
 fixNames a = fmap (\x -> case x of
                     '_' -> 'U'
                     t -> t
@@ -92,13 +93,15 @@ renderAgD _ = ""
 render :: DS.Set AgD -> String
 render x = intercalate "\n\n" $ map renderAgD $ DS.toList x
 
-killdots = filter (\x -> not ((==) '.' x))
+killdots = killdotsP '♙'
 
-renderPragma (AgD {..}) = ("{-# COMPILE GHC "++ (fixNames $ tshow agdName) ++ " = data " ++ (fixNames $ tshow agdName) ++ " ( " ++ (intercalate " | " $ map ((flip (++) "C") . tshow . agcName) agdCons) ++ " ) #-}")
+killdotsP pp = map (\x -> if x == '.' then pp else x) -- filter (\x -> not ((==) '.' x))
+
+renderPragma (AgD {..}) = ("{-# COMPILE GHC "++ (fixNames $ tshow agdName) ++ " = data " ++ (fixNames $ tshow agdName) ++ " ( " ++ (intercalate " | " $ map ( tshow . agcName) agdCons) ++ " ) #-}")
 renderPragma (AgT {..}) = ""
 
 renderModule :: Module AgD -> String
-renderModule (Module m) = (intercalate "\n\n " $ (map (\(zk,zv) -> "-- split-here :module ♖"++killdots zk++" where\n"++((intercalate "\n" $ map (\x -> "open import "++x) $ DS.toList $ DS.fromList $ map (killdots . init . fst . revmodName) $ filter (\x -> not $ isInfixOf (killdots zk) (killdots x)) $ intercalate [] $ map findImports zv))++"\nmutual\n" ++(intercalate "\n" $ map (\x -> "\t"++x) $ lines (render $ DS.fromList zv)) ++ "\n\n" ++ (intercalate "\n\n" $ filter (not . (==) "") $ map renderPragma zv))) $ DM.toList m)
+renderModule (Module m) = (intercalate "\n\n " $ (map (\(zk,zv) -> "-- split-here :\t"++(fixNames $ killdotsP '/' zk) ++"\tmodule ♖"++(fixNames $ killdots zk)++" where\n"++((intercalate "\n" $ map (\x -> "open import "++(fixNames x)) $ DS.toList $ DS.fromList $ map (killdots . init . fst . revmodName) $ filter (\x -> not $ isInfixOf (killdots zk) (killdots x)) $ intercalate [] $ map findImports zv))++"\nmutual\n" ++(intercalate "\n" $ map (\x -> "\t"++x) $ lines (render $ DS.fromList zv)) ++ "\n\n" ++ "{-# FOREIGN GHC import " ++ zk ++ " #-}\n\n" ++ (intercalate "\n\n" $ filter (not . (==) "") $ map renderPragma zv))) $ DM.toList m)
 
 hask2ag'' :: String -> Q Exp
 hask2ag'' typ = do
@@ -393,19 +396,29 @@ findImportsLinearType (LF x) = (findImportsCustomName x)
 
 
 findImportsCustomName :: CustomName -> [String]
-findImportsCustomName (OrigName n) | mnam == "Maybe" = ["Data+Maybe.Maybe"]
-                                   | mnam == "String" = ["Data+String.String"]
-                                   | mnam == "Bool" = ["Data+Bool.Bool"]
-                                   | mnam == "Double" = ["♖GHC.Types.Double"]
-                                   | mnam == "Char" = ["Data+Char.Char"]
-                                   -- | mnam == "Array" = ["Data+Text.Array"]
-                                   | mnam == "ByteArray#" = ["♖GHC.Prim.ByteArray#"]
+findImportsCustomName (OrigName n) | mnam == "Integer" = ["♖GHC♝Types.Integer"]
+                                   | mnam == "String" = ["♖GHC♝Types.String"]
+                                   -- | mnam == "Maybe" = ["Data♝Maybe.Maybe"]
+                                   | mnam == "Maybe" = ["♖GHC♝Types.Maybe"]
+                                   | mnam == "Bool" = ["Data♝Bool.Bool"]
+                                   | mnam == "Double" = ["♖GHC♝Types.Double"]
+                                   | mnam == "Char" = ["Data♝Char.Char"]
+                                   | mnam == "Either" = ["Data♝Sum.Either"]
+                                   | mnam == "Text" = ["♖GHC♝Types.Text"]
+                                   
+                                   | mnam == "Word" = ["♖GHC♝Types.Word"]
+                                   | mnam == "Word64" = ["♖GHC♝Types.Word64"]
+                                   | mnam == "Int" = ["♖GHC♝Types.Int"]
+                                   | mnam == "Set" = ["♖GHC♝Types.Set"]
+                                   | mnam == "Int32" = ["♖GHC♝Types.Int32"]                                   
+                                   | mnam == "Array" = ["♖GHC♝Types.Array"]
+                                   | mnam == "ByteArray#" = ["♖GHC♝Types.ByteArray#"]
                                    | otherwise = ["♖" ++ show n]
   where
     mnam = snd $ revmodName (show n)
-findImportsCustomName (CustomList) = ["Data+List.List"]
-findImportsCustomName (CustomTuple 0) = ["Data+Empty.Bot"]
-findImportsCustomName (CustomTuple 2) = ["Data+Product.Prod2"]
+findImportsCustomName (CustomList) = ["Data♝List.List"]
+findImportsCustomName (CustomTuple 0) = ["Data♝Empty.Bot"]
+findImportsCustomName (CustomTuple 2) = ["♖GHC♝Types.CustomProd2","Data♝Product.Prod2"]
 findImportsCustomName (CustomTuple _) = []
 findImportsCustomName (CustomTyvar _) = []
 

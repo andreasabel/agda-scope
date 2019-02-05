@@ -1,24 +1,36 @@
 module mainSC where
 
-open import AST.AgdaSyntaxConcrete
-open import AST.AgdaUtilsFileName
+open import AST.Agda.Syntax.Concrete
+open import AST.Agda.Utils.FileName
+open import AST.GHC.Types hiding (String)
 
 
 open import Data.List
-open import Data.String
+open import Data.String as DS
 open import Data.Bool
 open import Data.Unit
 open import ExtraLibs.Library
 
+Module : Set
+Module = (List Pragma) ×P (List Declaration)
 
 
 postulate
   readFile        : String → IO String
-  parseFile       : String → AbsolutePath
+  -- parseFile       : String → AbsolutePath
+  moduleParserEx  : String → String → IO Module
+  mtst1           : List Declaration -> IO String
 
 {-# FOREIGN GHC import System.IO #-}
 {-# FOREIGN GHC import Data.Text #-}
 {-# COMPILE GHC readFile = (fmap Data.Text.pack) . System.IO.readFile . Data.Text.unpack #-}
+
+{-# FOREIGN GHC import HaskellHelper.ParseAST #-}
+{-# COMPILE GHC moduleParserEx =  \ x y -> HaskellHelper.ParseAST.moduleParserEx (Data.Text.unpack x) (Data.Text.unpack y)  #-}
+{-# COMPILE GHC mtst1 = HaskellHelper.ParseAST.mtst1  #-}
+
+
+
 
 
 usage : IO ⊤
@@ -48,7 +60,7 @@ usage = do
 -- {-# FOREIGN GHC import Control.Monad.Trans.State.Lazy #-}
 -- {-# FOREIGN GHC import Data.Text #-}
 -- {-# FOREIGN GHC import GHC.Base #-}
--- {-# FOREIGN GHC import GHC.Show #-}
+-- {-# FOREIGN GHC import GHC♖GHC♝Types.Int32.Show #-}
 -- {-# FOREIGN GHC import System.IO #-}
 
 -- {-# COMPILE GHC moduleParser = Agda.Syntax.Parser.moduleParser #-}
@@ -69,4 +81,8 @@ main = do
   path ∷ [] ← getArgs where _ → usage
   fileContent <- readFile path
   putStrLn fileContent
+  modu <- moduleParserEx path fileContent
+  ff <- mtst1 (msnd modu)
+  putStrLn ff
+  putStrLn "loaded"
   where open IOMonad
