@@ -2,7 +2,7 @@ module Concrete where
 
 open import Data.List.Base using (List; []; _∷_)
 open import Data.String using (String)
-open import Data.String.Unsafe using (_≟_)
+open import Data.String.Unsafe public using (_≟_)
 
 Name = String
 QName = List String
