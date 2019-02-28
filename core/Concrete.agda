@@ -17,3 +17,17 @@ mutual
     mDecl : (x : Name) (ds : Decls) → Decl
 
   Decls = List Decl
+
+unqual : Name → Exp
+unqual x = ident (x ∷ [])
+
+example : Decl
+example = mDecl "Top"           -- module Top
+    ( axiom "A" univ            --   A : Set
+    ∷ axiom "a" (unqual "A")    --   a : A
+    ∷ mDecl "M"                 --   module M
+      ( axiom "b" (unqual "A")  --     b : A
+      ∷ axiom "c" (unqual "A")  --     c : A
+      ∷ [])
+    ∷ axiom "d" (ident ("M" ∷ "c" ∷ []))    --   d : M.c
+    ∷ [])

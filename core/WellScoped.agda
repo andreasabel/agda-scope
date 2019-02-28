@@ -85,7 +85,7 @@ module Example where
       ( sDecl "b" (def (sname (there here!) (there here!) symb))   --     b : A
       ∷ sDecl "c" (def (sname (there here!) (there here!) symb))   --     c : A
       ∷ [])
-    ∷ sDecl "d" (def (sname here! here! (child (lname here! symb)))) ∷ []) --   d : b
+    ∷ sDecl "d" (def (sname here! here! (child (lname here! symb)))) ∷ []) --   d : M.c
 
 -- module Top where
 --   A : Set

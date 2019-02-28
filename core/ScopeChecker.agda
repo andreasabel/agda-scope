@@ -114,10 +114,9 @@ mutual
     rs' , ds' ← checkDecls ds sc (s ∷ rs)
     return (rs' , d' ∷ ds')
 
-
 -- Example.
 
-module Example where
+module Example1 where
 
   open A.Example
 
@@ -128,3 +127,12 @@ module Example where
   qname = "Top" ∷ "M" ∷ "c" ∷ []
 
   test = checkExp (C.ident qname) scope
+
+module Example2 where
+
+  module AE = A.Example
+
+  test = checkDecl C.example []
+
+  _ : test ≡ return (_ , AE.example)
+  _ = refl
