@@ -100,13 +100,12 @@ mutual
   checkDecl (C.axiom x ty) sc = do
     -- TODO: check whether x is shadowing something illegally
     ty' ← checkExp ty sc
-    return (_ , sDecl {x = x} ty')
-    -- return (symb x , sDecl ty')
+    return (symb x , sDecl x ty')
 
   checkDecl (C.mDecl x ds) sc = do
     -- TODO: check whether x is shadowing something illegally
     rs , ds' ← checkDecls ds sc []
-    return (modl x rs , mDecl ds')
+    return (modl x rs , mDecl x ds')
 
   checkDecls : (ds : C.Decls) (sc : Scope) (rs : Skels) → M (∃ λ rs' → A.Decls sc rs rs')
   checkDecls []       sc rs = return (rs , [])

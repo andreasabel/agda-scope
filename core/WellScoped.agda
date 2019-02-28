@@ -64,8 +64,8 @@ data Exp (sc : Scope) : Set where
 
 mutual
   data Decl (z : Scope) : Skel → Set where
-    sDecl : ∀{x} (ty : Exp z) → Decl z (symb x)
-    mDecl : ∀{x rs} (ds : Decls z [] rs) → Decl z (modl x rs)  -- OR: reverse rs
+    sDecl : ∀ x (ty : Exp z) → Decl z (symb x)
+    mDecl : ∀ {rs} x (ds : Decls z [] rs) → Decl z (modl x rs)  -- OR: reverse rs
 
   data Decls (z : Scope) (rs : Skels) : (rs' : Skels) → Set where
     []  : Decls z rs rs
@@ -78,14 +78,14 @@ module Example where
   skel : Skel
   skel = modl "Top" (symb "d" ∷ modl "M" (symb "c" ∷ symb "b" ∷ []) ∷ symb "a" ∷ symb "A" ∷ [])
   example : Decl [] skel
-  example = mDecl {x = "Top"}                                             -- module Top
-    ( sDecl {x = "A"} univ                                               --   A : Set
-    ∷ sDecl {x = "a"} (def (sname here! here! symb))                     --   a : A
-    ∷ mDecl {x = "M"}                                                   --   module M
-      ( sDecl {x = "b"} (def (sname (there here!) (there here!) symb))   --     b : A
-      ∷ sDecl {x = "c"} (def (sname (there here!) (there here!) symb))   --     c : A
+  example = mDecl "Top"                                             -- module Top
+    ( sDecl "A" univ                                               --   A : Set
+    ∷ sDecl "a" (def (sname here! here! symb))                     --   a : A
+    ∷ mDecl "M"                                                   --   module M
+      ( sDecl "b" (def (sname (there here!) (there here!) symb))   --     b : A
+      ∷ sDecl "c" (def (sname (there here!) (there here!) symb))   --     c : A
       ∷ [])
-    ∷ sDecl {x = "d"} (def (sname here! here! (child (lname here! symb)))) ∷ []) --   d : b
+    ∷ sDecl "d" (def (sname here! here! (child (lname here! symb)))) ∷ []) --   d : b
 
 -- module Top where
 --   A : Set
