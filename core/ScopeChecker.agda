@@ -9,6 +9,8 @@ open import Data.List using (List; []; _∷_)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Sum.Categorical.Left using (functor; applicative; monad)
 
+open import Data.Product using (∃; _,_; proj₁; proj₂)
+
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
@@ -54,6 +56,9 @@ eqCName x y with x C.≟ y
 ... | yes p = return p
 ... | no ¬p = fail (notEqual x y)
 
+
+-- Looking up a qualified name in module skeletons.
+
 mutual
   lookupD : (x : C.QName) (k : NameKind) (s : Skel) → M (Name k s)
   lookupD (x ∷ []) symb (symb y) = do
@@ -73,15 +78,43 @@ mutual
     =   (lname here! <$> lookupD x k s)
     <|> (wkLName <$> lookupL x k ss)
 
+-- Looking up a qualified name in the scope.
+
 lookup : (x : C.QName) (k : NameKind) (sc : Scope) → M (SName k sc)
 lookup x k [] = fail (notInScope x k [])
 lookup x k (s ∷ sc)
   =   (gname here! <$> lookupL x k s)
   <|> (wkSName     <$> lookup x k sc)
 
+-- Scope checking expressions.
+
 checkExp : (e : C.Exp) (sc : Scope) → M (A.Exp sc)
 checkExp C.univ      sc = return A.univ
 checkExp (C.ident x) sc = A.def <$> lookup x symb sc
+
+-- Scope checking declarations.
+
+mutual
+  checkDecl : (d : C.Decl) (sc : Scope) → M (∃ λ s → A.Decl sc s)
+
+  checkDecl (C.axiom x ty) sc = do
+    -- TODO: check whether x is shadowing something illegally
+    ty' ← checkExp ty sc
+    return (_ , sDecl {x = x} ty')
+    -- return (symb x , sDecl ty')
+
+  checkDecl (C.mDecl x ds) sc = do
+    -- TODO: check whether x is shadowing something illegally
+    rs , ds' ← checkDecls ds sc []
+    return (modl x rs , mDecl ds')
+
+  checkDecls : (ds : C.Decls) (sc : Scope) (rs : Skels) → M (∃ λ rs' → A.Decls sc rs rs')
+  checkDecls []       sc rs = return (rs , [])
+  checkDecls (d ∷ ds) sc rs = do
+    s   , d'  ← checkDecl  d  (rs ∷ sc)
+    rs' , ds' ← checkDecls ds sc (s ∷ rs)
+    return (rs' , d' ∷ ds')
+
 
 -- Example.
 

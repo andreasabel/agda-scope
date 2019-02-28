@@ -13,7 +13,7 @@ data Exp : Set where
 
 mutual
   data Decl : Set where
-    axiom : (ty : Exp) → Decl
+    axiom : (x : Name) (ty : Exp) → Decl
     mDecl : (x : Name) (ds : Decls) → Decl
 
   Decls = List Decl
