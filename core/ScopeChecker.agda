@@ -6,16 +6,6 @@ import Concrete as C
 import WellScoped as A
 open A hiding (module Example)
 
--- Scope map
---
-
--- data ScSkel : Skel → Set where
---   symb : (x : C.Name) → ScSkel symb
---   modl : (x : C.Name) {ss : Skels} → ScSkels ss → ScSkel (modl ss)
-
-postulate
-  ScMap : Scope → Set
-
 -- Scope errors
 
 data ScopeError : Set where
