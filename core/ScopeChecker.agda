@@ -1,18 +1,6 @@
+open import Library
+
 module ScopeChecker where
-
-open import Category.Functor using (RawFunctor)
-open import Category.Applicative using (RawApplicative)
-open import Category.Monad using (RawMonad) -- ; return; _>>=_)
-
-open import Data.List using (List; []; _∷_)
-
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Sum.Categorical.Left using (functor; applicative; monad)
-
-open import Data.Product using (∃; _,_; proj₁; proj₂)
-
-open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 import Concrete as C
 import WellScoped as A

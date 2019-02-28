@@ -1,12 +1,9 @@
-module WellScoped where
+-- Abstract syntax, intrinsically well-scoped.
 
-open import Data.List.Base using (List; []; _∷_; reverse)
-open import Data.List.Membership.Propositional using (_∈_)
-open import Data.List.Relation.Unary.Any using (here; there)
-
-open import Relation.Binary.PropositionalEquality using (refl)
-
+open import Library
 import Concrete as C
+
+module WellScoped where
 
 pattern here! = here refl
 
