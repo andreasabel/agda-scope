@@ -1,22 +1,21 @@
 -- Andreas, 2019-01-24 small example to test parser
 
-public module Top where {
+module Top where
 
-  public A : Set
-  public P : forall (x : A) -> Set
+public A : Set
+public P : forall (x : A) -> Set
 
-  public module M (x : A) (p : P x) where {
+public module M (x : A) (p : P x) where {
 
-    def y = x
-    private module N = Top.M y p using () renaming (y to z)
-    open N public
+  def y = x
+  private module N = Top.M y p using () renaming (y to z)
+  open N public
 
-    public module O where {
+  public module O where {
 
-      public B : Set
-      def B = A
-
-    }
+    public B : Set
+    def B = A
 
   }
+
 }

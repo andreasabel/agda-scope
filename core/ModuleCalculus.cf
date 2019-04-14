@@ -2,9 +2,9 @@
 -- describing a core of Agda that is supposed to capture
 -- the essential features of the module system.
 
--- A program is a list of declarations.
+-- A program is a top-level module containing a list of declarations.
 
-Prg.  Prg ::= [Decl] ;
+Prg.  Prg ::= "module" Ident "where" [Decl] ;
 
 -- Declarations.
 --
@@ -25,7 +25,7 @@ terminator Decl "" ;
 -- Qualified identifiers: non-empty lists of identifiers.
 -- Should not allow spaces around the ".", but this is not easily expressed in BNFC.
 
-QName.   QName ::= Ident          ;  -- Last identifier (unqualified).
+QName.   QName ::= Ident           ;  -- Last identifier (unqualified).
 Qual.    QName ::= Ident "." QName ;  -- Qualification.
 
 -- Modifiers: public / private / system
