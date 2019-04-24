@@ -41,13 +41,13 @@ mutual
   lookupD : (x : C.QName) (k : NameKind) (s : Skel) → M (Name k s)
   lookupD (x ∷ []) symb (symb y) = do
     refl ← eqCName x y
-    return symb
+    return (symb x)
   lookupD (x ∷ []) modl (modl y ss) = do
     refl ← eqCName x y
-    return modl
+    return (modl x)
   lookupD (x ∷ (z ∷ zs)) k (modl y ss) = do
     refl ← eqCName x y
-    child <$> lookupL (z ∷ zs) k ss
+    child x <$> lookupL (z ∷ zs) k ss
   lookupD x k _ = fail (notInScope x k [])
 
   lookupL : (x : C.QName) (k : NameKind) (ss : Skels) → M (LName k ss)
@@ -68,7 +68,7 @@ lookup x k (s ∷ sc)
 
 checkExp : (e : C.Exp) (sc : Scope) → M (A.Exp sc)
 checkExp C.univ      sc = return A.univ
-checkExp (C.ident x) sc = A.def <$> lookup x symb sc
+checkExp (C.ident x) sc = A.ident <$> lookup x symb sc
 
 -- Scope checking declarations.
 

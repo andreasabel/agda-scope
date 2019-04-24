@@ -29,9 +29,9 @@ Scope = List Skels
 mutual
 
   data Name : (k : NameKind) (s : Skel) → Set where
-    symb  : ∀{x}                       → Name symb (symb x)
-    modl  : ∀{x ss}                    → Name modl (modl x ss)
-    child : ∀{x k ss} (n : LName k ss) → Name k    (modl x ss)
+    symb  : ∀ x                         → Name symb (symb x)
+    modl  : ∀ x {ss}                    → Name modl (modl x ss)
+    child : ∀ x {k ss} (n : LName k ss) → Name k    (modl x ss)
 
   record LName (k : NameKind) (rs : Skels) : Set where
     inductive; constructor lname
@@ -56,8 +56,8 @@ wkSName : ∀{k rs sc} → SName k sc → SName k (rs ∷ sc)
 wkSName (gname i x) = gname (there i) x
 
 data Exp (sc : Scope) : Set where
-  def  : SName symb sc → Exp sc
-  univ : Exp sc
+  ident : SName symb sc → Exp sc
+  univ  : Exp sc
 
 mutual
 
@@ -81,19 +81,15 @@ module Example where
   skel : Skel
   skel = modl "Top" (symb "d" ∷ modl "M" (symb "c" ∷ symb "b" ∷ []) ∷ symb "a" ∷ symb "A" ∷ [])
   example : Decl [] skel
-  example = mDecl "Top"                                                    -- module Top
-    ( sDecl "A" univ                                                       --   A : Set
-    ∷ sDecl "a" (def (sname here! here! symb))                             --   a : A
-    ∷ mDecl "M"                                                            --   module M
-      ( sDecl "b" (def (sname (there here!) (there here!) symb))           --     b : A
-      ∷ sDecl "c" (def (sname (there here!) (there here!) symb))           --     c : A
+  example = mDecl "Top"                                                                -- module Top
+    ( sDecl "A" univ                                                                   --   A : Set
+    ∷ sDecl "a" (ident (sname here! here! (symb "A")))                                 --   a : A
+    ∷ mDecl "M"                                                                        --   module M
+      ( sDecl "b" (ident (sname (there here!) (there here!) (symb "A")))               --     b : A
+      ∷ sDecl "c" (ident (sname (there here!) (there here!) (symb "A")))               --     c : A
       ∷ [])
-    ∷ sDecl "d" (def (sname here! here! (child (lname here! symb)))) ∷ []) --   d : M.c
+    ∷ sDecl "d" (ident (sname here! here! (child "M" (lname here! (symb "c"))))) ∷ []) --   d : M.c
 
--- module Top where
---   A : Set
---   a : A
---   module M where
 
 {-
 -- A "de Bruijn index"
