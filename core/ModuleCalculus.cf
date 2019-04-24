@@ -4,7 +4,7 @@
 
 -- A program is a top-level module containing a list of declarations.
 
-Prg.  Prg ::= "module" Ident "where" [Decl] ;
+Prg.  Program ::= "module" Ident "where" [Decl] ;
 
 -- Declarations.
 --

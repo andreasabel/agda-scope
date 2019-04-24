@@ -9,7 +9,7 @@ import ModuleCalculus.Print
 
 check :: String -> IO ()
 check s = do
-  case pPrg (myLexer s) of
+  case pProgram (myLexer s) of
     Bad err  -> do
       putStrLn "SYNTAX ERROR"
       putStrLn err
