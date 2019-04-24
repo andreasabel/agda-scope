@@ -19,6 +19,7 @@ ghcflags=--ghc-flag=-i../haskell --ghc-flag=-Wwarn
 
 test : mocal
 	! ./mocal test/Example.agda
+	! ./mocal test/ScopeErr.agda
 	./mocal test/Tiny.agda
 
 # The extra dependency $(grammar)/Test ensures that the parser is built from $(grammar).cf

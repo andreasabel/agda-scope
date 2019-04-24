@@ -17,12 +17,18 @@ check contents = do
       putStrLn "SYNTAX ERROR"
       putStrLn (String.fromList cs)
       exitFailure
-  inj₂ decl ← return $ p→c program where
+  inj₂ cdecl ← return $ p→c program where
     (inj₁ unsupported) → do
       putStrLn "ERROR: UNSUPPORTED SYNTAX"
       putStrLn (printProgram program)
       exitFailure
-  putStrLn (printDecl (c→p decl))
+  inj₂ (sk , adecl) ← return $ checkDecl cdecl [] where
+    (inj₁ scoperr) → do
+      putStrLn "SCOPE ERROR"
+      putStrLn (printDecl (c→p cdecl))
+      exitFailure
+  putStrLn "SUCCESS"
+  putStrLn (printDecl (c→p cdecl))
 
   where
   open IOMonad
