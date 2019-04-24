@@ -25,27 +25,27 @@ mutual
 Scope = List Skels
 
 -- A "de Bruijn index"
+
 mutual
 
   data Name : (k : NameKind) (s : Skel) → Set where
-    symb  : ∀{x} → Name symb (symb x)
-    modl  : ∀{x ss} → Name modl (modl x ss)
-    child : ∀{x k ss} (n : LName k ss) → Name k (modl x ss)
-    -- child : ∀{x k s ss} (i : s ∈ ss) (n : Name k s) → Name k (modl x ss)
+    symb  : ∀{x}                       → Name symb (symb x)
+    modl  : ∀{x ss}                    → Name modl (modl x ss)
+    child : ∀{x k ss} (n : LName k ss) → Name k    (modl x ss)
 
   record LName (k : NameKind) (rs : Skels) : Set where
     inductive; constructor lname
     field
       {s} : Skel
-      j   : s  ∈ rs
+      j   : s ∈ rs
       x   : Name k s
 
 record SName (k : NameKind) (sc : Scope) : Set where
   constructor gname
   field
     {rs} : Skels
-    i : rs ∈ sc
-    x : LName k rs
+    i    : rs ∈ sc
+    x    : LName k rs
 
 pattern sname i j x = gname i (lname j x)
 
@@ -60,13 +60,19 @@ data Exp (sc : Scope) : Set where
   univ : Exp sc
 
 mutual
-  data Decl (z : Scope) : Skel → Set where
-    sDecl : ∀ x (ty : Exp z) → Decl z (symb x)
-    mDecl : ∀ {rs} x (ds : Decls z [] rs) → Decl z (modl x rs)  -- OR: reverse rs
 
-  data Decls (z : Scope) (rs : Skels) : (rs' : Skels) → Set where
-    []  : Decls z rs rs
-    _∷_ : ∀{s rs'} (d : Decl (rs ∷ z) s) (ds : Decls z (s ∷ rs) rs') → Decls z rs rs'
+  data Decl (sc : Scope) : Skel → Set where
+    sDecl : ∀ x      (ty : Exp sc)         → Decl sc (symb x)
+    mDecl : ∀ x {rs} (ds : Decls sc [] rs) → Decl sc (modl x rs)  -- OR: reverse rs
+
+  -- rs  : Skels before the Decls
+  -- rs' : Skels after  the Decls
+  data Decls (sc : Scope) (rs : Skels) : (rs' : Skels) → Set where
+    []  : Decls sc rs rs
+    _∷_ : ∀{s rs'}
+          (d  : Decl (rs ∷ sc) s)
+          (ds : Decls sc (s ∷ rs) rs')
+              → Decls sc rs       rs'
 
 infixr 5 _∷_
 
@@ -75,12 +81,12 @@ module Example where
   skel : Skel
   skel = modl "Top" (symb "d" ∷ modl "M" (symb "c" ∷ symb "b" ∷ []) ∷ symb "a" ∷ symb "A" ∷ [])
   example : Decl [] skel
-  example = mDecl "Top"                                             -- module Top
-    ( sDecl "A" univ                                               --   A : Set
-    ∷ sDecl "a" (def (sname here! here! symb))                     --   a : A
-    ∷ mDecl "M"                                                   --   module M
-      ( sDecl "b" (def (sname (there here!) (there here!) symb))   --     b : A
-      ∷ sDecl "c" (def (sname (there here!) (there here!) symb))   --     c : A
+  example = mDecl "Top"                                                    -- module Top
+    ( sDecl "A" univ                                                       --   A : Set
+    ∷ sDecl "a" (def (sname here! here! symb))                             --   a : A
+    ∷ mDecl "M"                                                            --   module M
+      ( sDecl "b" (def (sname (there here!) (there here!) symb))           --     b : A
+      ∷ sDecl "c" (def (sname (there here!) (there here!) symb))           --     c : A
       ∷ [])
     ∷ sDecl "d" (def (sname here! here! (child (lname here! symb)))) ∷ []) --   d : M.c
 
