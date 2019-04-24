@@ -6,6 +6,7 @@ open import ModuleCalculus.AST    using (Program; printProgram; printDecl)
 open import ModuleCalculus.Parser using (Err; ok; bad; parseProgram)
 open import ParsedToConcrete      using (unsupported; p→c; c→p)
 open import ScopeChecker          using (checkDecl)
+open import AbstractToConcrete    using (a→c-Decl)
 
 -- open import TypeChecker using (printError; module CheckProgram)
 -- open import Interpreter using (runProgram)
@@ -28,7 +29,7 @@ check contents = do
       putStrLn (printDecl (c→p cdecl))
       exitFailure
   putStrLn "SUCCESS"
-  putStrLn (printDecl (c→p cdecl))
+  putStrLn (printDecl (c→p (a→c-Decl adecl)))
 
   where
   open IOMonad
