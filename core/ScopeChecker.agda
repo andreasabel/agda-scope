@@ -45,9 +45,9 @@ mutual
   lookupD (x ∷ []) modl (modl y ss) = do
     refl ← eqCName x y
     return modl
-  lookupD (x ∷ xs) k (modl y ss) = do
+  lookupD (x ∷ (z ∷ zs)) k (modl y ss) = do
     refl ← eqCName x y
-    child <$> lookupL xs k ss
+    child <$> lookupL (z ∷ zs) k ss
   lookupD x k _ = fail (notInScope x k [])
 
   lookupL : (x : C.QName) (k : NameKind) (ss : Skels) → M (LName k ss)

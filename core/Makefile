@@ -18,7 +18,8 @@ ghcflags=--ghc-flag=-i../haskell --ghc-flag=-Wwarn
 .PHONY : sdist clean distclean test
 
 test : mocal
-	./mocal test/Example.agda
+	! ./mocal test/Example.agda
+	./mocal test/Tiny.agda
 
 # The extra dependency $(grammar)/Test ensures that the parser is built from $(grammar).cf
 

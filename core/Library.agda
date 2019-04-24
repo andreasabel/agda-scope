@@ -12,11 +12,14 @@ open import Data.Product                          public using (∃; _,_; proj�
 open import Data.Sum                              public using (_⊎_; inj₁; inj₂)
 open import Data.Sum.Categorical.Left             public using (functor; applicative; monad)
 
-open import Data.List.Base                        public using (List; []; _∷_)
 open import Data.String                           public using (String; _≟_)
 
+open import Data.List.Base                        public using (List; []; _∷_; map)
 open import Data.List.Membership.Propositional    public using (_∈_)
 open import Data.List.Relation.Unary.Any          public using (here; there)
+open import Data.List.Categorical                 public using (mapM)
+
+open import Data.List.NonEmpty                    public using (List⁺; _∷_; _∷⁺_)
 
 open import Function                              public using (id; _∘_; _∘′_; _$_; case_of_)
 
@@ -24,6 +27,13 @@ open import Relation.Nullary                      public using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality public using (_≡_; refl)
 
 open import IO.Primitive      public using (IO)
+
+-- Utilities
+
+liftM2 : ∀{a} {M : Set a → Set a} {{app : RawApplicative M}}
+         {A B C : Set a} (f : A → B → C) (ma : M A) (mb : M B) → M C
+liftM2 {{app}} f ma mb = zipWith f ma mb
+  where open RawApplicative app
 
 module String where
   open import Data.String.Base public

@@ -2,34 +2,27 @@
 module mocal where
 
 open import Library
-open import ModuleCalculus.AST    using (Program; printProgram)
+open import ModuleCalculus.AST    using (Program; printProgram; printDecl)
 open import ModuleCalculus.Parser using (Err; ok; bad; parseProgram)
+open import ParsedToConcrete      using (unsupported; p→c; c→p)
+open import ScopeChecker          using (checkDecl)
+
 -- open import TypeChecker using (printError; module CheckProgram)
 -- open import Interpreter using (runProgram)
 
--- -- Other modules, not used here.
--- import Value
--- import Evaluation
--- import FlowChart
-
 check : String → IO ⊤
 check contents = do
-  case parseProgram contents of λ where
+  Err.ok program ← return $ parseProgram contents where
     (bad cs) → do
       putStrLn "SYNTAX ERROR"
       putStrLn (String.fromList cs)
       exitFailure
-    (Err.ok program) → do
-          putStrLn (printProgram program)
-  --     case checkProgram prg of λ where
-  --       (fail err) → do
-  --         putStrLn "TYPE ERROR"
-  --         putStrLn (printProgram prg)
-  --         putStrLn "The type error is:"
-  --         putStrLn (printError err)
-  --         exitFailure
-  --       (ErrorMonad.ok (Σ , prg')) → do
-  --         runProgram prg'
+  inj₂ decl ← return $ p→c program where
+    (inj₁ unsupported) → do
+      putStrLn "ERROR: UNSUPPORTED SYNTAX"
+      putStrLn (printProgram program)
+      exitFailure
+  putStrLn (printDecl (c→p decl))
 
   where
   open IOMonad

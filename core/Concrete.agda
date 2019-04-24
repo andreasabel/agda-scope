@@ -1,11 +1,12 @@
-open import Library
+-- Restricted syntax as input for scope checker.
 
 module Concrete where
 
+open import Library
 open import Library public using (_≟_)
 
 Name = String
-QName = List String
+QName = List⁺ String
 
 data Exp : Set where
   ident : QName → Exp
