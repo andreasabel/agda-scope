@@ -30,6 +30,9 @@ open import IO.Primitive      public using (IO)
 
 -- Utilities
 
+pattern here! = here refl
+pattern yes!  = yes  refl
+
 liftM2 : ∀{a} {M : Set a → Set a} {{app : RawApplicative M}}
          {A B C : Set a} (f : A → B → C) (ma : M A) (mb : M B) → M C
 liftM2 {{app}} f ma mb = zipWith f ma mb

@@ -9,7 +9,7 @@ open A hiding (module Example)
 -- Scope errors
 
 data ScopeError : Set where
-  notInScope : ∀ (x : C.QName) (k : NameKind) (sc : Scope) → ScopeError
+  notInScope : (x : C.QName) (k : NameKind) (sc : Scope) → ScopeError
   -- Internal errors:
   notEqual : (x y : C.Name) → ScopeError
 
@@ -35,40 +35,50 @@ eqCName x y with x C.≟ y
 ... | no ¬p = fail (notEqual x y)
 
 
--- Looking up a qualified name in module skeletons.
+module DeprecatedLookup where
 
-mutual
-  lookupD : (x : C.QName) (k : NameKind) (s : Skel) → M (Name k s)
-  lookupD (x ∷ []) symb (symb y) = do
-    refl ← eqCName x y
-    return (symb x)
-  lookupD (x ∷ []) modl (modl y ss) = do
-    refl ← eqCName x y
-    return (modl x)
-  lookupD (x ∷ (z ∷ zs)) k (modl y ss) = do
-    refl ← eqCName x y
-    child x <$> lookupL (z ∷ zs) k ss
-  lookupD x k _ = fail (notInScope x k [])
+  -- Looking up a qualified name in module skeletons.
 
-  lookupL : (x : C.QName) (k : NameKind) (ss : Skels) → M (LName k ss)
-  lookupL x k [] = fail (notInScope x k [])
-  lookupL x k (s ∷ ss)
-    =   (lname here! <$> lookupD x k s)
-    <|> (wkLName <$> lookupL x k ss)
+  mutual
+    lookupD : (xs : C.QName) (k : NameKind) (s : Skel) → M (Name k xs s)
+    lookupD (x ∷ []) symb (symb y) = do
+      refl ← eqCName x y
+      return (symb x)
+    lookupD (x ∷ []) modl (modl y ss) = do
+      refl ← eqCName x y
+      return (modl x)
+    lookupD (x ∷ (z ∷ zs)) k (modl y ss) = do
+      refl ← eqCName x y
+      child x <$> lookupL (z ∷ zs) k ss
+    lookupD xs k _ = fail (notInScope xs k [])
+
+    lookupL : (xs : C.QName) (k : NameKind) (ss : Skels) → M (LName k xs ss)
+    lookupL xs k [] = fail (notInScope xs k [])
+    lookupL xs k (s ∷ ss)
+      =   (lname here! <$> lookupD xs k s)
+      <|> (wkLName <$> lookupL xs k ss)
+
+  -- Looking up a qualified name in the scope.
+
+  lookup : (xs : C.QName) (k : NameKind) (sc : Scope) → M (SName k xs sc)
+  lookup xs k [] = fail (notInScope xs k [])
+  lookup xs k (s ∷ sc)
+    =   (sname here! <$> lookupL xs k s)
+    <|> (wkSName     <$> lookup xs k sc)
+
 
 -- Looking up a qualified name in the scope.
 
-lookup : (x : C.QName) (k : NameKind) (sc : Scope) → M (SName k sc)
-lookup x k [] = fail (notInScope x k [])
-lookup x k (s ∷ sc)
-  =   (gname here! <$> lookupL x k s)
-  <|> (wkSName     <$> lookup x k sc)
+lookup : (xs : C.QName) (k : NameKind) (sc : Scope) → M (SName k xs sc)
+lookup xs k sc = case sname? k xs sc of λ where
+  (yes n) → return n
+  (no ¬n) → fail (notInScope xs k sc)
 
 -- Scope checking expressions.
 
 checkExp : (e : C.Exp) (sc : Scope) → M (A.Exp sc)
-checkExp C.univ      sc = return A.univ
-checkExp (C.ident x) sc = A.ident <$> lookup x symb sc
+checkExp C.univ       sc = return A.univ
+checkExp (C.ident xs) sc = A.ident <$> lookup xs symb sc
 
 -- Scope checking declarations.
 

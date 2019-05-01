@@ -5,22 +5,23 @@ import Concrete as C
 
 module WellScoped where
 
-pattern here! = here refl
-
 -- We have two kinds of names: module names and ordinary names.
 
 data NameKind : Set where
   symb : NameKind  -- Ordinary symbol name.
   modl : NameKind  -- Module name.
 
--- Skeleton of a declaration
+-- Skeleton of a declaration:
+-- Contains only the declared names.
 
 mutual
   data Skel : Set where
-    symb : (x : C.Name) → Skel               -- function symbol declaration
-    modl : (x : C.Name) (ss : Skels) → Skel  -- module declaration with content
+    symb : (x : C.Name) → Skel               -- Function symbol declaration.
+    modl : (x : C.Name) (ss : Skels) → Skel  -- Module declaration with content (names declared there).
 
   Skels = List Skel  -- reversed w.r.t to the ordering in the file (last on top)
+
+-- A scope is a zipper.
 
 Scope = List Skels
 
@@ -28,35 +29,91 @@ Scope = List Skels
 
 mutual
 
-  data Name : (k : NameKind) (s : Skel) → Set where
-    symb  : ∀ x                         → Name symb (symb x)
-    modl  : ∀ x {ss}                    → Name modl (modl x ss)
-    child : ∀ x {k ss} (n : LName k ss) → Name k    (modl x ss)
+  -- "(k,xs) ∈ s"
+  data Name : (k : NameKind) (xs : C.QName) (s : Skel) → Set where
+    symb  : ∀ x                               → Name symb (x ∷ []) (symb x)
+    modl  : ∀ x {ss}                          → Name modl (x ∷ []) (modl x ss)
+    child : ∀ x {k xs ss} (n : LName k xs ss) → Name k (x ∷⁺ xs)   (modl x ss)
 
-  record LName (k : NameKind) (rs : Skels) : Set where
+  -- "(k,xs) ∈ rs"
+  record LName (k : NameKind) (xs : C.QName) (rs : Skels) : Set where
     inductive; constructor lname
     field
       {s} : Skel
       j   : s ∈ rs
-      x   : Name k s
+      x   : Name k xs s
 
-record SName (k : NameKind) (sc : Scope) : Set where
-  constructor gname
+-- "k ∈ sc"
+record SName (k : NameKind) (xs : C.QName) (sc : Scope) : Set where
+  constructor sname
   field
     {rs} : Skels
     i    : rs ∈ sc
-    x    : LName k rs
+    x    : LName k xs rs
 
-pattern sname i j x = gname i (lname j x)
+pattern name i j x = sname i (lname j x)
 
-wkLName : ∀{k s rs} → LName k rs → LName k (s ∷ rs)
+-- Weakening names.
+
+wkLName : ∀{k xs s rs} → LName k xs rs → LName k xs (s ∷ rs)
 wkLName (lname i x) = lname (there i) x
 
-wkSName : ∀{k rs sc} → SName k sc → SName k (rs ∷ sc)
-wkSName (gname i x) = gname (there i) x
+wkSName : ∀{k xs rs sc} → SName k xs sc → SName k xs (rs ∷ sc)
+wkSName (sname i x) = sname (there i) x
+
+-- Being a Name is decidable (this is the lookup function).
+
+mutual
+  name?  : ∀ k xs s → Dec (Name k xs s)
+  -- Resolve qualification.
+  name? k (x ∷ z ∷ zs) (modl y ss) with x ≟ y
+  name? k (x ∷ z ∷ zs) (modl x ss) | yes!  with lname? k (z ∷ zs) ss
+  ... | yes n = yes (child x n)
+  ... | no ¬n = no (λ{ (child x n) → ¬n n})
+  name? k (x ∷ z ∷ zs) (modl y ss) | no ¬p = no λ{ (child x n) → ¬p refl}
+  -- Overqualified.
+  name? k (x ∷ _ ∷ _ ) (symb y) = no λ()  -- A symb has no children.
+  -- Resolve CName.
+  name? modl (x ∷ []) (modl y ss) with x ≟ y
+  name? modl (x ∷ []) (modl x ss) | yes!  = yes (Name.modl x)
+  name? modl (x ∷ []) (modl y ss) | no ¬p = no λ{ (modl x) → ¬p refl }
+  name? symb (x ∷ []) (symb y)    with x ≟ y
+  name? symb (x ∷ []) (symb x)    | yes!  = yes (symb x)
+  name? symb (x ∷ []) (symb y)    | no ¬p = no λ{ (symb x) → ¬p refl }
+  -- modl/symb mismatch.
+  name? modl (_ ∷ []) (symb _) = no λ()
+  name? symb (_ ∷ []) (modl _ _) = no λ()
+
+  lname? : ∀ k xs rs → Dec (LName k xs rs)
+  -- List exhausted
+  lname? k xs []       = no λ()
+  -- In head?
+  lname? k xs (s ∷ rs) with name? k xs s
+  lname? k xs (s ∷ rs) | yes n = yes (lname here! n)
+  -- In tail?
+  lname? k xs (s ∷ rs) | no ¬n with lname? k xs rs
+  lname? k xs (s ∷ rs) | no _  | yes (lname j n) = yes (lname (there j) n)
+  lname? k xs (s ∷ rs) | no ¬n | no ¬m = no λ where
+    (lname here!     n) → ¬n n
+    (lname (there j) m) → ¬m (lname j m)
+
+sname? : ∀ k xs sc → Dec (SName k xs sc)
+-- List exhausted
+sname? k xs []        = no λ()
+-- In head?
+sname? k xs (rs ∷ sc) with lname? k xs rs
+... | yes n = yes (sname here! n)
+... | no ¬n with sname? k xs sc
+-- In tail?
+...   | yes (sname i n) = yes (sname (there i) n)
+...   | no ¬m = no λ where
+          (sname here!     n) → ¬n n
+          (sname (there i) m) → ¬m (sname i m)
+
+-- Well-scoped expressions
 
 data Exp (sc : Scope) : Set where
-  ident : SName symb sc → Exp sc
+  ident : ∀{xs} → SName symb xs sc → Exp sc
   univ  : Exp sc
 
 mutual
@@ -70,8 +127,8 @@ mutual
   data Decls (sc : Scope) (rs : Skels) : (rs' : Skels) → Set where
     []  : Decls sc rs rs
     _∷_ : ∀{s rs'}
-          (d  : Decl (rs ∷ sc) s)
-          (ds : Decls sc (s ∷ rs) rs')
+          (d  : Decl (rs ∷ sc) s)       -- s is the scope declared by d
+          (ds : Decls sc (s ∷ rs) rs')  -- we append s to rs to check the remaining ds
               → Decls sc rs       rs'
 
 infixr 5 _∷_
@@ -81,14 +138,14 @@ module Example where
   skel : Skel
   skel = modl "Top" (symb "d" ∷ modl "M" (symb "c" ∷ symb "b" ∷ []) ∷ symb "a" ∷ symb "A" ∷ [])
   example : Decl [] skel
-  example = mDecl "Top"                                                                -- module Top
-    ( sDecl "A" univ                                                                   --   A : Set
-    ∷ sDecl "a" (ident (sname here! here! (symb "A")))                                 --   a : A
-    ∷ mDecl "M"                                                                        --   module M
-      ( sDecl "b" (ident (sname (there here!) (there here!) (symb "A")))               --     b : A
-      ∷ sDecl "c" (ident (sname (there here!) (there here!) (symb "A")))               --     c : A
+  example = mDecl "Top"                                                               -- module Top
+    ( sDecl "A" univ                                                                  --   A : Set
+    ∷ sDecl "a" (ident (name here! here! (symb "A")))                                 --   a : A
+    ∷ mDecl "M"                                                                       --   module M
+      ( sDecl "b" (ident (name (there here!) (there here!) (symb "A")))               --     b : A
+      ∷ sDecl "c" (ident (name (there here!) (there here!) (symb "A")))               --     c : A
       ∷ [])
-    ∷ sDecl "d" (ident (sname here! here! (child "M" (lname here! (symb "c"))))) ∷ []) --   d : M.c
+    ∷ sDecl "d" (ident (name here! here! (child "M" (lname here! (symb "c"))))) ∷ []) --   d : M.c
 
 
 {-
