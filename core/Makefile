@@ -9,7 +9,9 @@ grammar=ModuleCalculus
 files=core.hs $(grammar).cf Makefile
 
 agda=agda
-agdafiles=Library.agda ModuleCalculus/AST.agda ModuleCalculus/Parser.agda Concrete.agda WellScoped.agda ScopeChecker.agda
+agdafiles=Library.agda $(grammar)/AST.agda $(grammar)/Parser.agda Concrete.agda WellScoped.agda ScopeChecker.agda
+genhsfiles=$(grammar)/Print.hs $(grammar)/ErrM.hs
+gengenhsfiles=$(grammar)/Lex.hs $(grammar)/Par.hs
 ghcflags=--ghc-flag=-i../haskell --ghc-flag=-Wwarn
 
 ###########################################################################
@@ -24,7 +26,7 @@ test : mocal
 
 # The extra dependency $(grammar)/Test ensures that the parser is built from $(grammar).cf
 
-mocal : mocal.agda $(agdafiles)
+mocal : mocal.agda $(agdafiles) $(genhsfiles) $(gengenhsfiles)
 	$(agda) --compile $(ghcflags) $<
 
 test-core : core
@@ -35,7 +37,7 @@ core : $(files) $(grammar)/Test
 
 # Rules to build the parser:
 
-$(grammar)/Test.hs $(grammar)/Lex.x $(grammar)/Par.y $(grammar)/AST.agda $(grammar)/Parser.agda : $(grammar).cf Makefile
+$(grammar)/Test.hs $(grammar)/Lex.x $(grammar)/Par.y $(genhsfiles) $(grammar)/AST.agda $(grammar)/Parser.agda : $(grammar).cf Makefile
 	bnfc --haskell --agda -d $<
 
 %.hs : %.y
