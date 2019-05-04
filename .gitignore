@@ -8,3 +8,8 @@ MAlonzo
 /core/core
 /core/Main
 /core/mocal
+/micro/micmod
+/micro/HierMod/Doc.txt
+/micro/HierMod/Par.info
+/micro/HierMod/Skel.hs
+/micro/HierMod/Test

@@ -1,0 +1,35 @@
+-- A labelled BNFC grammar (to be processed with BNFC)
+-- describing hierarchical modules in Agda syntax.
+-- Andreas, 2019-05-04
+
+-- A program is a top-level module containing a list of declarations.
+
+Prg.   Program ::= "module" Name "where" "{" Decls "}" ;
+
+-- Declarations are modules or references to modules.
+
+Modl.  Decl ::= "module" Name "where" "{" Decls "}"    ; -- A new module with content.
+Ref.   Decl ::= "module" "_" "=" QName                 ; -- A reference to a module.
+
+DNil.  Decls ::= ;
+DSnoc. Decls ::= Decls Decl ;
+
+-- separator Decl ";" ;
+
+-- Qualified identifiers: non-empty lists of identifiers.
+-- Should not allow spaces around the ".", but this is not easily expressed in BNFC.
+
+QName.   QName ::= Name           ;  -- Last identifier (unqualified).
+Qual.    QName ::= Name "." QName ;  -- Qualification.
+
+-- Identifiers.
+
+token Name (char - [ "(){};.@\" \n\t" ]) + ;
+  -- Only excluding Agdas reserved symbols and whitespace (too liberal).
+
+-- Comments.
+
+comment "--"      ;  -- line comment
+comment "{-" "-}" ;  --  non-nested block comment
+
+-- EOF
