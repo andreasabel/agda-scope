@@ -24,12 +24,9 @@ mutual
     there : ∀{ss s} (n : LName xs ss) → LName xs (C.dSnoc ss s)
 
 -- "xs declared in sc"
-record SName (xs : C.QName) (sc : Scope) : Set where
-  constructor sname
-  field
-    {ss} : C.Decls
-    i    : ss ∈ sc
-    x    : LName xs ss
+data SName (xs : C.QName) : (sc : Scope) → Set where
+  here  : ∀{sc ss} → LName xs ss → SName xs (ss ∷ sc)
+  there : ∀{sc ss} → SName xs sc → SName xs (ss ∷ sc)
 
 -- Decide whether xs is declared in s/ss/sc.
 
@@ -66,14 +63,13 @@ sname? : ∀ xs sc → Dec (SName xs sc)
 sname? xs []        = no λ()
 -- In head?
 sname? xs (rs ∷ sc) with lname? xs rs
-... | yes n = yes (sname here! n)
+... | yes n = yes (here n)
 ... | no ¬n with sname? xs sc
 -- In tail?
-...   | yes (sname i n) = yes (sname (there i) n)
+...   | yes m = yes (there m)
 ...   | no ¬m = no λ where
-          (sname here!     n) → ¬n n
-          (sname (there i) m) → ¬m (sname i m)
-
+          (here  n) → ¬n n
+          (there m) → ¬m m
 
 -- Well-scoped declarations
 
@@ -98,11 +94,6 @@ data WScope : Scope → Set where
   sNil  : WScope []
   sSnoc : ∀{sc ss} → WScope sc → Decls sc ss → WScope (ss ∷ sc)
 
-
--- Weakening names.
-
-wkSName : ∀{xs ss sc} → SName xs sc → SName xs (ss ∷ sc)
-wkSName (sname i x) = sname (there i) x
 
 
 -- -}
