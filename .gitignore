@@ -3,6 +3,11 @@
 *.bak
 *.o
 *.hi
+*.aux
+*.log
+*.out
+*.pdf
+texput.log
 MAlonzo
 /core/ModuleCalculus/
 /core/core
