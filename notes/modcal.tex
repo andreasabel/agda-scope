@@ -60,7 +60,174 @@
 \section{Introduction}
 \label{sec:intro}
 
+\section{Hierarchical Modules: A Minimal Calculus}
+
+Abstract syntax.
+\[
+\begin{array}{lrl@{\qquad}l}
+  s & ::=  & \mdef x {s^*}    & \mbox{module definition} \\
+    & \mid & \mref {x^+}      & \mbox{module reference}  \\[1ex]
+  x &  &                      & \mbox{simple name}       \\
+  q & ::=  & x^+              & \mbox{qualified name}    \\[1ex]
+  \alpha,\beta  & ::= & s^*   & \mbox{module content}    \\
+  \Gamma,\Delta & ::= & \Ga^* & \mbox{scope}             \\
+\end{array}
+\]
+A concrete syntax for statements could be the Agda module syntax, \ie,
+$\texttt{module}~x~\texttt{where}~s^*$ for $\mdef x {s^*}$, and
+$\texttt{module~\_~=}~q$ for $\mref q$.
+
+Sequences of type $\_^*$ may be empty whereas $\_^+$ stands for
+non-empty sequences.
+We write $\Ge$ for the empty sequence and use a dot %or raised dot
+for concatenation.
+We silently cast elements to singleton sequences, \eg,
+we write $x$ for $x.\Ge$.
+We write $\Gamma \chop s$ for the result of splitting the last
+statement $s$ off a scope $\Delta \sep (\Ga \sep s) \sep \Ge^*$;
+then $\Gamma = \Delta \sep \Ga$.
+% This way, $\Gamma \sep s$ makes sense, \eg,
+% $(\Delta \sep \alpha) \sep s$ means $\Delta \sep (\alpha \sep s)$,
+% and $\Ge \sep s$ (as scope) means $\Ge \sep (\Ge \sep s)$.
+
+Judgements.
+\[
+\begin{array}{l@{\qquad}l}
+  % \Declares s      {x^+} & \mbox{Statement $s$ declares name $x^+$} \\
+  % \Declares {s^*}  {x^+} & \mbox{Content $s^*$ declares name $x^+$} \\
+  % \Declares \Gamma {x^+} & \mbox{Scope $\Gamma$ declares name $x^+$} \\[1ex]
+  \Contains \Gamma q & \mbox{Scope $\Gamma$ declares name $q$} \\
+  \Declares \Gamma q & \mbox{Scope $\Gamma$ declares name $q$ (disambiguated)} \\
+  \WContent \Gamma \alpha & \mbox{Module content $\alpha$ is well-scoped in $\Gamma$}\\
+  \WScope \Gamma & \mbox{Scope $\Gamma$ is well-formed}
+\end{array}
+\]
+\fbox{$\Contains \Gamma q$}
+\begin{gather*}
+  \nru{\rhere
+     }{
+     }{\Contains {\Gamma \chop \mdef x \beta} x}
+\qquad
+  \nru{\rinto
+     }{\Contains \beta q
+     }{\Contains {\Gamma \chop \mdef x \beta} {x.q}}
+\qquad
+   \nru{\rthere
+      }{\Contains \Gamma q
+      }{\Contains {\Gamma \chop s} q}
+\end{gather*}
+The judgement $\Contains \Gamma q$ is a decidable set, its inhabitants
+are paths to the definition site of a name.
+% A name $q$ is
+% \emph{ambiguous} in scope $\Gamma$ if $\Contains \Gamma q$ has more
+% than one inhabitant.
+$\Contains \Gamma q$ may have more than one inhabitant, meaning that
+name $q$ would be ambiguous.
+We can disambiguate by always take the closest declaration as the
+definition of a name.
+
+\fbox{$\Declares \Gamma q$} (implies $\Contains \Gamma q$).
+\begin{gather*}
+  \nru{\rhere
+     }{
+     }{\Declares {\Gamma \chop \mdef x \beta} x}
+\qquad
+  \nru{\rinto
+     }{\Declares \beta q
+     }{\Declares {\Gamma \chop \mdef x \beta} {x.q}}
+\qquad
+   \nru{\rthere
+      }{\Declares \Gamma q \qquad \NotContains s q
+      }{\Declares {\Gamma \chop s} q}
+\end{gather*}
+$\Declares \Gamma q$ is a proposition, \ie, contains at most one
+inhabitant.  This inhabitant, when it exists, may be the considered
+the \emph{resolution} of name $q$ in $\Gamma$, and it is the
+equivalent of a de Bruijn index in lambda calculus.
+\begin{lemma}[Unambiguity of resolved names]
+  If $y,z : (\Declares \Gamma q)$ then $y = z$.
+\end{lemma}
+\begin{proof}
+  By induction on $y,z : (\Declares \Gamma q)$.
+  For a representative case, consider
+  $y = \rinto\;y'$ and $z = \rthere\;z'$.
+  Assuming the last declaration in $\Gamma$ is $s = \mdef x \beta$,
+  this means that $y' : (\Declares \beta q)$,
+  but also $\NotContains s q$, implied by $z$.  However,
+  $\rinto\;y' : (\Declares s q)$, which is impossible, as it implies
+  $\Contains s q$.
+\end{proof}
+
+Well-scopedness of statement (lists): propositions
+\fbox{$\WContent \Gamma s$}  and
+\fbox{$\WContent \Gamma \alpha$}\,.
+\begin{gather*}
+  \ru{\Declares \Gamma q}{\WContent \Gamma {\mref q}}
+\qquad
+  \ru{\NoClash \Gamma x \qquad \WContent \Gamma \beta
+    }{\WContent \Gamma {\mdef x \beta}
+    }
+\qquad
+  \ru{}{\WContent \Gamma \Ge}
+\qquad
+  \ru{\WContent \Gamma \alpha \qquad
+      \WContent {\Gamma \sep \alpha} s
+    }{\WContent \Gamma {\alpha \sep s}
+    }
+\end{gather*}
+Declaring a new name $x$ involves checking for name clashes via judgement
+$\NoClash \Gamma x$.  We can have $\NoClash \Gamma x$ vacuously true
+without introducing ambiguity, but this might permit unwanted
+shadowing.
+For instance, content $\mdef x \alpha \sep \mdef x \beta \sep \mref x$ may be ruled out
+since it introduces the same name $x$ \emph{on the same level} twice.
+The reference $x$ is still unambiguous as we resolve it to the last
+definition of $x$, however, this is likely to confuse programmers
+working in a language with such shadowing.
+In contrast, $\mdefp x {\mdef x \Ge}$ which declares a
+parent $x$ with a child named $x$, is less controversial, since the
+shadowing is on different levels.  It is very common that local
+definitions may share global definitions, for instance.
+
+To disallow shadowing on the same level, we define proposition
+\fbox{$\NoClash \Gamma x$} as follows, using auxiliary proposition
+\fbox{$\NoClash \alpha x$} and
+\fbox{$\NoClash s x$}.
+\begin{gather*}
+  \ru{}{\NoClash \Ge x}
+\qquad
+  \ru{\NoClash \alpha x
+    }{\NoClash {\Gamma \sep \alpha} x}
+\qquad
+  \ru{\NoClash \alpha x \qquad \NoClash s x
+    }{\NoClash {\alpha \sep s} x}
+\qquad
+%\\[2ex]
+  \ru{}{\NoClash {\mref q} x}
+\qquad
+  \ru{x \not= x'
+    }{\NoClash {\mdef {x'} \beta} x}
+\end{gather*}
+Note that for $\NoClash {\Gamma \sep \alpha} x$,
+we only check the last content block $\alpha$,
+which is on the same level as the to-be-defined name $x$.
+However, then we need to check \emph{all} statements within that block
+$\alpha$.
+
+Well-formedness of scopes $\WScope \Gamma$.
+\begin{gather*}
+  \ru{}{\WScope \Ge}
+\qquad
+  \ru{\WScope \Gamma \qquad \WContent \Gamma \alpha
+    }{\WScope {\Gamma \sep \alpha}}
+\end{gather*}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 \section{Hierarchical Modules: A Minimal Calculus With Aliases}
+
+Disclaimer: cut-and-paste from previous section, repetitive.
 
 Abstract syntax.
 \[
