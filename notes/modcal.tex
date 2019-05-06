@@ -119,20 +119,41 @@ Judgements.
      }{
      }{\Contains {\Gamma \chop s} {\defined s}}
 \qquad
+   \nru{\rthere
+      }{\Contains \Gamma q
+      }{\Contains {\Gamma \chop s} q}
+\\[2ex]
   \nru{\rinto
      }{\Contains \beta q
      }{\Contains {\Gamma \chop \mdef x \beta} {x.q}}
 \qquad
-   \nru{\rthere
-      }{\Contains \Gamma q
-      }{\Contains {\Gamma \chop s} q}
+  \nru{\rfollow
+     }{\Contains \Gamma {q'.q}
+     }{\Contains {\Gamma \chop \malias x q'} {x.q}}
 \end{gather*}
 The judgement $\Contains \Gamma q$ is a decidable set, its inhabitants
 are paths to the definition site of a name.
+
+To resolve a qualified name $x.q$ matching an alias $q$,
+$\Contains {\Gamma \chop \malias x q'} {x.q}$,
+the intuitive procedure would be to look up the content $\alpha$
+of the aliased module $q'$, and then resolve $q'$ in $\alpha$.
+However, the decidability would be less trivial; for termination,
+we would have to argue that $\alpha$ is structurally smaller
+than $\Gamma$.  While this is easy to see, it still would be more
+laborious to formalize: we would need a relation that maps a name to
+its content (if any), define a \emph{smaller-than} relation on scopes,
+prove its well-foundedness, and prove that in scope $\Gamma$,
+the retrieved content $\alpha$ is always smaller than $\Gamma$.
+Our $\rfollow$ rule instead expands the alias on the fly, and
+continues with the expanded name.
+
+
 % A name $q$ is
 % \emph{ambiguous} in scope $\Gamma$ if $\Contains \Gamma q$ has more
 % than one inhabitant.
-$\Contains \Gamma q$ may have more than one inhabitant, meaning that
+For fixed $\Gamma$ and $q$, the set $\Contains \Gamma q$
+may have more than one inhabitant, meaning that
 name $q$ would be ambiguous.
 We can disambiguate by always take the closest declaration as the
 definition of a name.
@@ -143,13 +164,17 @@ definition of a name.
      }{
      }{\Declares {\Gamma \chop s} {\defined s}}
 \qquad
+   \nru{\rthere
+      }{\Declares \Gamma q \qquad \NotContains s q
+      }{\Declares {\Gamma \chop s} q}
+\\[2ex]
   \nru{\rinto
      }{\Declares \beta q
      }{\Declares {\Gamma \chop \mdef x \beta} {x.q}}
 \qquad
-   \nru{\rthere
-      }{\Declares \Gamma q \qquad \NotContains s q
-      }{\Declares {\Gamma \chop s} q}
+  \nru{\rfollow
+     }{\Declares \Gamma {q'.q}
+     }{\Declares {\Gamma \chop \malias x q'} {x.q}}
 \end{gather*}
 $\Declares \Gamma q$ is a proposition, \ie, contains at most one
 inhabitant.  This inhabitant, when it exists, may be the considered
