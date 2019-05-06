@@ -60,13 +60,13 @@
 \section{Introduction}
 \label{sec:intro}
 
-\section{Hierarchical Modules: A Minimal Calculus}
+\section{Hierarchical Modules: A Minimal Calculus With Aliases}
 
 Abstract syntax.
 \[
 \begin{array}{lrl@{\qquad}l}
   s & ::=  & \mdef x {s^*}    & \mbox{module definition} \\
-    & \mid & \mref {x^+}      & \mbox{module reference}  \\[1ex]
+    & \mid & \malias x q      & \mbox{module alias}  \\[1ex]
   x &  &                      & \mbox{simple name}       \\
   q & ::=  & x^+              & \mbox{qualified name}    \\[1ex]
   \alpha,\beta  & ::= & s^*   & \mbox{module content}    \\
@@ -75,7 +75,16 @@ Abstract syntax.
 \]
 A concrete syntax for statements could be the Agda module syntax, \ie,
 $\texttt{module}~x~\texttt{where}~s^*$ for $\mdef x {s^*}$, and
-$\texttt{module~\_~=}~q$ for $\mref q$.
+$\texttt{module}~x~\texttt{=}~q$ for $\malias x q$.
+
+Another interpretation would be a file system with folders only.  Then
+$\mdef x {s^*}$ defines a folder with subfolders $s^*$, and $\malias x
+q$ is a symbolic link to $q$ named $x$.  However, file systems usually
+allow arbitrary recursion, \eg, we can have folders $A$ and $B$ where
+$A$ contains a link to $B$ and vice versa.  This would yield an
+infinite path $A.B.A.B...$. In contrast, we are aiming
+at well-founded structures, where pathes are finite and
+aliases can in principle be expanded.
 
 Sequences of type $\_^*$ may be empty whereas $\_^+$ stands for
 non-empty sequences.
@@ -83,12 +92,14 @@ We write $\Ge$ for the empty sequence and use a dot %or raised dot
 for concatenation.
 We silently cast elements to singleton sequences, \eg,
 we write $x$ for $x.\Ge$.
-We write $\Gamma \chop s$ for the result of splitting the last
+We write \fbox{$\Gamma \chop s$} for the result of splitting the last
 statement $s$ off a scope $\Delta \sep (\Ga \sep s) \sep \Ge^*$;
 then $\Gamma = \Delta \sep \Ga$.
 % This way, $\Gamma \sep s$ makes sense, \eg,
 % $(\Delta \sep \alpha) \sep s$ means $\Delta \sep (\alpha \sep s)$,
 % and $\Ge \sep s$ (as scope) means $\Ge \sep (\Ge \sep s)$.
+The name $x$ defined in statement $s$ is \fbox{$\defined s$}, thus,
+$\defined(\mdef x \beta) = \defined(\malias x q) = x$.
 
 Judgements.
 \[
@@ -106,7 +117,7 @@ Judgements.
 \begin{gather*}
   \nru{\rhere
      }{
-     }{\Contains {\Gamma \chop \mdef x \beta} x}
+     }{\Contains {\Gamma \chop s} {\defined s}}
 \qquad
   \nru{\rinto
      }{\Contains \beta q
@@ -130,7 +141,7 @@ definition of a name.
 \begin{gather*}
   \nru{\rhere
      }{
-     }{\Declares {\Gamma \chop \mdef x \beta} x}
+     }{\Declares {\Gamma \chop s} {\defined s}}
 \qquad
   \nru{\rinto
      }{\Declares \beta q
@@ -162,7 +173,8 @@ Well-scopedness of statement (lists): propositions
 \fbox{$\WContent \Gamma s$}  and
 \fbox{$\WContent \Gamma \alpha$}\,.
 \begin{gather*}
-  \ru{\Declares \Gamma q}{\WContent \Gamma {\mref q}}
+  \ru{\NoClash \Gamma x \qquad \Declares \Gamma q
+    }{\WContent \Gamma {\malias x q}}
 \qquad
   \ru{\NoClash \Gamma x \qquad \WContent \Gamma \beta
     }{\WContent \Gamma {\mdef x \beta}
@@ -179,7 +191,7 @@ Declaring a new name $x$ involves checking for name clashes via judgement
 $\NoClash \Gamma x$.  We can have $\NoClash \Gamma x$ vacuously true
 without introducing ambiguity, but this might permit unwanted
 shadowing.
-For instance, content $\mdef x \alpha \sep \mdef x \beta \sep \mref x$ may be ruled out
+For instance, content $\mdef x \alpha \sep \mdef x \beta \sep \malias y x$ may be ruled out
 since it introduces the same name $x$ \emph{on the same level} twice.
 The reference $x$ is still unambiguous as we resolve it to the last
 definition of $x$, however, this is likely to confuse programmers
@@ -202,11 +214,8 @@ To disallow shadowing on the same level, we define proposition
   \ru{\NoClash \alpha x \qquad \NoClash s x
     }{\NoClash {\alpha \sep s} x}
 \qquad
-%\\[2ex]
-  \ru{}{\NoClash {\mref q} x}
-\qquad
-  \ru{x \not= x'
-    }{\NoClash {\mdef {x'} \beta} x}
+  \ru{\defined s \not= x
+    }{\NoClash s x}
 \end{gather*}
 Note that for $\NoClash {\Gamma \sep \alpha} x$,
 we only check the last content block $\alpha$,
