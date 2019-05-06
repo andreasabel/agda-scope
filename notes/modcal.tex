@@ -62,6 +62,8 @@
 
 \section{Hierarchical Modules: A Minimal Calculus}
 
+Disclaimer: may be outdated, the next section is actively worked on.
+
 Abstract syntax.
 \[
 \begin{array}{lrl@{\qquad}l}
@@ -394,26 +396,18 @@ shadowing is on different levels.  It is very common that local
 definitions may share global definitions, for instance.
 
 To disallow shadowing on the same level, we define proposition
-\fbox{$\NoClash \Gamma x$} as follows, using auxiliary proposition
-\fbox{$\NoClash \alpha x$} and
-\fbox{$\NoClash s x$}.
+\fbox{$\NoClash \Gamma x$} as follows:
 \begin{gather*}
   \ru{}{\NoClash \Ge x}
 \qquad
-  \ru{\NoClash \alpha x
+  \ru{\NotDeclares \alpha x
     }{\NoClash {\Gamma \sep \alpha} x}
-\qquad
-  \ru{\NoClash \alpha x \qquad \NoClash s x
-    }{\NoClash {\alpha \sep s} x}
-\qquad
-  \ru{\defined s \not= x
-    }{\NoClash s x}
 \end{gather*}
 Note that for $\NoClash {\Gamma \sep \alpha} x$,
 we only check the last content block $\alpha$,
 which is on the same level as the to-be-defined name $x$.
-However, then we need to check \emph{all} statements within that block
-$\alpha$.
+(However, we then check \emph{all} statements within that block
+$\alpha$.)
 
 Well-formedness of scopes $\WScope \Gamma$.
 \begin{gather*}
@@ -422,6 +416,133 @@ Well-formedness of scopes $\WScope \Gamma$.
   \ru{\WScope \Gamma \qquad \WContent \Gamma \alpha
     }{\WScope {\Gamma \sep \alpha}}
 \end{gather*}
+
+\section{Opening Modules}
+
+Module systems often feature statements that let us include the
+contents of one module in another.  In Agda, this is the \texttt{open}
+statement.
+\[
+\begin{array}{lrl@{\qquad}l}
+  s & ::= & \mopen q & \mbox{import content of module $q$}
+\end{array}
+\]
+In the most basic form, where $\mopen q$ imports the \emph{whole}
+content of module $q$ into the current scope, $\topen$ can be realized
+analogously to $\talias$:
+\[
+  \nru{\ropen
+     }{\Contains \Gamma {q'.q}
+     }{\Contains {\Gamma \sep \mopen {q'}} q}
+\qquad
+  \nru{\ropen
+     }{\Declares \Gamma {q'.q}
+     }{\Declares {\Gamma \sep \mopen {q'}} q}
+\qquad
+  \ru{\Declares \Gamma q
+    }{\WContent \Gamma {\mopen q}}
+\]
+In fact, $\topen$ is just an $\talias$ with an empty name.
+We might consider aliases that define \emph{qualified} names,
+including the empty name.
+\[
+\begin{array}{lrl@{\qquad}l}
+  s & ::= & \malias \vxs q & \mbox{import content of module $q$ under
+                              extra qualification $\vxs$} \\
+  \vxs & ::= & x^*         & \mbox{qualification prefix} \\
+\end{array}
+\]
+Then $\mopen q = \malias \Ge q$.
+
+Setting $\defined(\malias \vxs q) = \vxs$ updates the $\rhere$
+rule.  The $\rfollow$ rule is virtually unchanged, just generalized
+from $x$ to $\vxs$.
+\[
+  \nru{\rfollow
+     }{\Contains \Gamma {q'.q}
+     }{\Contains {\Gamma \chop \malias \vxs q'} {\vxs.q}}
+\qquad
+  \nru{\rfollow
+     }{\Declares \Gamma {q'.q}
+     }{\Declares {\Gamma \chop \malias \vxs q'} {\vxs.q}}
+\]
+It is a bit unclear though what the shadowing rules for aliases $\vxs$
+should be.
+
+The simulation of $\topen$ via a generalized $\talias$ can be
+reversed: we can encode $\malias x q$ as $\mdefp x {\mopen q}$.
+Similarily, a generalized $\malias {x_1\dots x_n} q$ where $n \geq 0$
+can be encoded by $\mdefp {x_1} {\dots \mdefp {x_n} {\mopen q}}$.
+It seems thus that $\topen$ is more primitive than $\talias$, and we
+can drop $\talias$ from the core module calculus.
+
+
+\subsection{Ambiguity}
+
+The names brought into scope by $\topen$ might clash with names
+already in scope.  Thus with $\topen$, the judgement
+$\Declares \Gamma q$ is no longer a proposition in general.
+However, whenever we \emph{use} a name $q$,
+we require it to be non-ambiguous.
+
+
+\subsection{Import restriction}
+
+It is very common that imports can be specified precisely, \ie, we may
+only import certain identifiers from a module.  Agda and Haskell have
+import directives for selecting only certain identifiers (Agda keyword
+\texttt{using}) or selecting all but certain identifiers (Agda and
+Haskell keyword \texttt{hiding}).  Agda also allows \texttt{renaming}
+of identifiers.  These directives can be subsumed under a
+\emph{renaming map} $\rho$ that maps simple names to simple names.
+The imported symbols are the domain of $\rho$, their names are
+given by the range of $\rho$.  The map should be injective, \ie, two
+different names should not be mapped to the same name.  It need not
+necessarily be functional, \ie, nothing speaks against importing a name
+twice under different names.\footnote{Agda forbids duplicate imports
+  of the same symbol (even when under different name) in a single
+  \texttt{open} statement.
+  As a consequence $\rho$, can be stored as a finite map from
+  imported symbols to their new name.
+  One may want to argue in favor of Agda
+  that importing the same symbol twice
+  (while under different names) is non-sensical and could be
+  errorneous and unintended by the user.  Agda does allow repetitive
+  import of the same symbol in separate \texttt{open} statements,
+  though.  One may want to argue further that this way, the user states more
+  explicitely that they want to import the same symbol twice.
+  However, one may argue just the other way round: a second
+  \texttt{open} statement with the same explicit import
+  is given in error, and stating the duplicate import
+  twice in the same \texttt{open} statement emphasizes the intent of
+  the user.}
+It might thus be more elegant to
+consider $\rho$ as a map from names defined by the import to their
+origin.  Thus, its range consists of the imported symbols, and its
+domain gives their new names.
+\[
+\begin{array}{lrl@{\qquad}l}
+  s & ::= & \mopenr q \rho & \mbox{import content, as given by $\rho$, of module $q$}
+\end{array}
+\]
+When trying to resolve a qualified name $x.\vxs$ in $\mopenr {q} \rho$, we
+subject $x$ to the renaming $\rho$.
+\begin{gather*}
+  \nru{\ropen
+     }{\Contains \Gamma {q.\rho(x).\vxs}
+     }{\Contains {\Gamma \sep \mopenr {q} \rho} {x.\vxs}}
+\qquad
+  \nru{\ropen
+     }{\Declares \Gamma {q.\rho(x).\vxs}
+     }{\Declares {\Gamma \sep \mopenr {q} \rho} {x.\vxs}}
+\\[2ex]
+  \ru{\Declares \Gamma q  \qquad
+      \forall x:\rng \rho.\ \Declares \Gamma {q.x}
+    }{\WContent \Gamma {\mopenr q \rho}}
+\end{gather*}
+An $\topen$ statement is well-formed if it does not try to import
+non-existing symbols.  In Agda-2.6.0, a violation of this sanity
+condition is not a hard error, it only produces a warning.
 
 \section{Discussion}
 

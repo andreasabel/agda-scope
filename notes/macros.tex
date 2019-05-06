@@ -37,6 +37,7 @@
 %\newcommand{\otto}{\leftrightarrow} %contained in nath.sty
 \newcommand{\Pot}{\mathcal{P}}
 \newcommand{\dom}{\mathop{\mathsf{dom}}\nolimits}
+\newcommand{\rng}{\mathop{\mathsf{rng}}\nolimits}
 \newcommand{\To}{\Rightarrow}
 \newcommand{\pto}{\rightharpoonup} % partial map
 \newcommand{\perto}{\stackrel{\mathsf{p}}\rightharpoonup} % partial coherent map
@@ -184,21 +185,28 @@
 \newcommand{\tmodule}{\mathsf{module}}
 \newcommand{\tref}{\mathsf{ref}}
 \newcommand{\talias}{\mathsf{alias}}
+\newcommand{\topen}{\mathsf{open}}
+
 \newcommand{\mdef}[2]{\tmodule\;#1\;#2}
 \newcommand{\mdefp}[2]{\tmodule\;#1\;(#2)}
 \newcommand{\mref}[1]{\tref\;#1}
 \newcommand{\malias}[2]{\talias\;#1\;#2}
+\newcommand{\mopen}[1]{\topen\;#1}
+\newcommand{\mopenr}[2]{\topen\;#1\;#2}
+
 \newcommand{\sep}{\,.\,}%\mathbin{.}}
 \newcommand{\chop}{\cdot}
-\newcommand{\defined}{\mathop{\mathrm{def}}}
+\newcommand{\defined}{\mathop{\mathsf{def}}}
 
 \newcommand{\Contains}[2]{#1\ni#2}
 \newcommand{\NotContains}[2]{#1\notni#2}
 \newcommand{\Declares}[2]{#1\der#2}
+\newcommand{\NotDeclares}[2]{#1\not\der#2}
 \newcommand{\rthere}{\rulename{there}}
 \newcommand{\rhere}{\rulename{here}}
 \newcommand{\rinto}{\rulename{into}}
 \newcommand{\rfollow}{\rulename{follow}}
+\newcommand{\ropen}{\rulename{open}}
 
 \newcommand{\NoClash}[2]{#1 \perp #2}
 \newcommand{\WContent}[2]{#1\der#2}
