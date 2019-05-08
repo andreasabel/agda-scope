@@ -15,8 +15,8 @@ mutual
 
   -- "Name xs s" means "xs declared in s"
   data Name : (xs : C.QName) (s : C.Decl) → Set where
-    modl  : ∀ x {ss}                      → Name (C.qName x)   (C.modl x ss)
-    child : ∀ x {xs ss} (n : LName xs ss) → Name (C.qual x xs) (C.modl x ss)
+    modl   : ∀ x {ss}                      → Name (C.qName x)   (C.modl x ss)
+    inside : ∀ x {xs ss} (n : LName xs ss) → Name (C.qual x xs) (C.modl x ss)
 
   -- "xs declared in rs"
   data LName (xs : C.QName) : (ss : C.Decls) → Set where
@@ -25,11 +25,11 @@ mutual
 
 -- "xs declared in sc"
 data SName (xs : C.QName) : (sc : Scope) → Set where
-  here  : ∀{sc ss} → LName xs ss → SName xs (ss ∷ sc)
-  there : ∀{sc ss} → SName xs sc → SName xs (ss ∷ sc)
+  site   : ∀{sc ss} → LName xs ss → SName xs (ss ∷ sc)
+  parent : ∀{sc ss} → SName xs sc → SName xs (ss ∷ sc)
 
-surj-child : ∀ {x xs ss} → Surjective {A = LName xs ss} (child x)
-surj-child (child x n) = n , refl
+surj-inside : ∀ {x xs ss} → Surjective {A = LName xs ss} (inside x)
+surj-inside (inside x n) = n , refl
 
 lname-surjective : ∀{xs ss s}
   → Surjective {B = LName xs (C.dSnoc ss s)} [ here , there ]′
@@ -37,9 +37,9 @@ lname-surjective (here  n) = inj₁ n , refl
 lname-surjective (there n) = inj₂ n , refl
 
 sname-surjective : ∀{xs ss sc}
-  → Surjective {B = SName xs (ss ∷ sc)} [ here , there ]′
-sname-surjective (here  n) = inj₁ n , refl
-sname-surjective (there n) = inj₂ n , refl
+  → Surjective {B = SName xs (ss ∷ sc)} [ site , parent ]′
+sname-surjective (site   n) = inj₁ n , refl
+sname-surjective (parent n) = inj₂ n , refl
 
 -- Decide whether xs is declared in s/ss/sc.
 
@@ -49,9 +49,9 @@ mutual
   name? xs (C.ref q) = no λ()
   -- Resolve qualification.
   name? (C.qual x xs) (C.modl y ss) with x C.≟ y | lname? xs ss
-  name? (C.qual x xs) (C.modl x ss) | yes!  | yes n = yes (child x n)
-  name? (C.qual x xs) (C.modl x ss) | yes!  | no ¬n = no λ{ (child x n) → ¬n n}
-  name? (C.qual x xs) (C.modl y ss) | no ¬p | _     = no λ{ (child x n) → ¬p refl}
+  name? (C.qual x xs) (C.modl x ss) | yes!  | yes n = yes (inside x n)
+  name? (C.qual x xs) (C.modl x ss) | yes!  | no ¬n = no λ{ (inside x n) → ¬n n}
+  name? (C.qual x xs) (C.modl y ss) | no ¬p | _     = no λ{ (inside x n) → ¬p refl}
   -- Resolve CName.
   name? (C.qName x) (C.modl y ss) with x C.≟ y
   name? (C.qName x) (C.modl x ss) | yes!  = yes (Name.modl x)
@@ -73,11 +73,11 @@ sname? : ∀ xs sc → Dec (SName xs sc)
 sname? xs []        = no λ()
 -- In head?, in tail?
 sname? xs (ss ∷ sc) with lname? xs ss | sname? xs sc
-... | yes n | _     = yes (here n)   -- Bias: Inner scopes take precedence!
-... | no ¬n | yes m = yes (there m)
+... | yes n | _     = yes (site n)   -- Bias: Inner scopes take precedence!
+... | no ¬n | yes m = yes (parent m)
 ... | no ¬n | no ¬m = no λ where
-  (here  n) → ¬n n
-  (there m) → ¬m m
+  (site  n) → ¬n n
+  (parent m) → ¬m m
 
 -- Looking up all possible resolutions of a name (not respecting shadowing).
 
@@ -87,8 +87,8 @@ mutual
   lookupAll xs (C.ref q)    = emptyEnum λ()
   -- Resolve qualification.
   lookupAll (C.qual x xs) (C.modl y ss) with x C.≟ y | llookupAll xs ss
-  lookupAll (C.qual x xs) (C.modl x ss) | yes!  | e = mapEnum (child x) surj-child e
-  lookupAll (C.qual x xs) (C.modl y ss) | no ¬p | _ = emptyEnum λ{ (child x n) → ¬p refl }
+  lookupAll (C.qual x xs) (C.modl x ss) | yes!  | e = mapEnum (inside x) surj-inside e
+  lookupAll (C.qual x xs) (C.modl y ss) | no ¬p | _ = emptyEnum λ{ (inside x n) → ¬p refl }
   -- Resolve CName.
   lookupAll (C.qName x) (C.modl y ss) with x C.≟ y
   lookupAll (C.qName x) (C.modl x ss) | yes!  = enum (modl x ∷ []) λ{ (modl x) → here! }
@@ -106,7 +106,8 @@ slookupAll : ∀ xs ss → Enumeration (SName xs ss)
 slookupAll xs [] = emptyEnum λ()
 -- In head?, in tail?
 slookupAll xs (ss ∷ sc) with llookupAll xs ss | slookupAll xs sc
-slookupAll xs (ss ∷ sc) | e | e' = appendEnum here there sname-surjective e e'
+slookupAll xs (ss ∷ sc) | e | e' = appendEnum site parent sname-surjective e e'
+
 
 -- Well-scoped declarations
 
