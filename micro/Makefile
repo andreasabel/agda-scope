@@ -23,8 +23,8 @@ ghcflags	=--ghc-flag=-i../haskell --ghc-flag=-Wwarn
 test : micmod
 	./micmod test/Example.agda
 	! ./micmod test/NotInScope.agda
-	! ./micmod test/Shadowed.agda
 	! ./micmod test/ScopeErr.agda
+	! ./micmod test/Shadowed.agda
 
 # Just the parser
 

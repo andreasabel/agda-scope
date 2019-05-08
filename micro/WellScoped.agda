@@ -108,6 +108,36 @@ slookupAll xs [] = emptyEnum λ()
 slookupAll xs (ss ∷ sc) with llookupAll xs ss | slookupAll xs sc
 slookupAll xs (ss ∷ sc) | e | e' = appendEnum site parent sname-surjective e e'
 
+-- Looking up possible resolutions of a name, discarding shadowed names of parents.
+
+mutual
+  lookup : ∀ xs s → List (Name xs s)
+  -- C.ref does not declare a name.
+  lookup xs (C.ref q)    = []
+  -- Resolve qualification.
+  lookup (C.qual x xs) (C.modl y ss) with x C.≟ y | llookup xs ss
+  lookup (C.qual x xs) (C.modl x ss) | yes!  | ns = map (inside x) ns
+  lookup (C.qual x xs) (C.modl y ss) | no ¬p | _  = []
+  -- Resolve CName.
+  lookup (C.qName x) (C.modl y ss) with x C.≟ y
+  lookup (C.qName x) (C.modl x ss) | yes!  = modl x ∷ []
+  lookup (C.qName x) (C.modl y ss) | no ¬p = []
+
+  llookup : ∀ xs ss → List (LName xs ss)
+  -- List exhausted
+  llookup xs C.dNil = []
+  -- In head?, in tail?
+  llookup xs (C.dSnoc ss s) with lookup xs s | llookup xs ss
+  llookup xs (C.dSnoc ss s) | ns | ns' = map here ns ++ map there ns'  -- no shadowing of siblings!
+
+slookup : ∀ xs ss → List (SName xs ss)
+-- List exhausted
+slookup xs [] = []
+-- In head?, in tail?
+slookup xs (ss ∷ sc) with llookup xs ss | slookup xs sc
+slookup xs (ss ∷ sc) | [] | ns = map parent ns  -- only keep when current site does not resolve the name
+slookup xs (ss ∷ sc) | ns | _  = map site   ns  -- discard parent occurrences if current site has one
+
 
 -- Well-scoped declarations
 
