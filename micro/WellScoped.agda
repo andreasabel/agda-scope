@@ -28,6 +28,19 @@ data SName (xs : C.QName) : (sc : Scope) → Set where
   here  : ∀{sc ss} → LName xs ss → SName xs (ss ∷ sc)
   there : ∀{sc ss} → SName xs sc → SName xs (ss ∷ sc)
 
+surj-child : ∀ {x xs ss} → Surjective {A = LName xs ss} (child x)
+surj-child (child x n) = n , refl
+
+lname-surjective : ∀{xs ss s}
+  → Surjective {B = LName xs (C.dSnoc ss s)} [ here , there ]′
+lname-surjective (here  n) = inj₁ n , refl
+lname-surjective (there n) = inj₂ n , refl
+
+sname-surjective : ∀{xs ss sc}
+  → Surjective {B = SName xs (ss ∷ sc)} [ here , there ]′
+sname-surjective (here  n) = inj₁ n , refl
+sname-surjective (there n) = inj₂ n , refl
+
 -- Decide whether xs is declared in s/ss/sc.
 
 mutual
@@ -65,6 +78,35 @@ sname? xs (ss ∷ sc) with lname? xs ss | sname? xs sc
 ... | no ¬n | no ¬m = no λ where
   (here  n) → ¬n n
   (there m) → ¬m m
+
+-- Looking up all possible resolutions of a name (not respecting shadowing).
+
+mutual
+  lookupAll : ∀ xs s → Enumeration (Name xs s)
+  -- C.ref does not declare a name.
+  lookupAll xs (C.ref q)    = emptyEnum λ()
+  -- Resolve qualification.
+  lookupAll (C.qual x xs) (C.modl y ss) with x C.≟ y | llookupAll xs ss
+  lookupAll (C.qual x xs) (C.modl x ss) | yes!  | e = mapEnum (child x) surj-child e
+  lookupAll (C.qual x xs) (C.modl y ss) | no ¬p | _ = emptyEnum λ{ (child x n) → ¬p refl }
+  -- Resolve CName.
+  lookupAll (C.qName x) (C.modl y ss) with x C.≟ y
+  lookupAll (C.qName x) (C.modl x ss) | yes!  = enum (modl x ∷ []) λ{ (modl x) → here! }
+  lookupAll (C.qName x) (C.modl y ss) | no ¬p = emptyEnum λ{ (modl x) → ¬p refl }
+
+  llookupAll : ∀ xs ss → Enumeration (LName xs ss)
+  -- List exhausted
+  llookupAll xs C.dNil = emptyEnum λ()
+  -- In head?, in tail?
+  llookupAll xs (C.dSnoc ss s) with lookupAll xs s | llookupAll xs ss
+  llookupAll xs (C.dSnoc ss s) | e | e' = appendEnum here there lname-surjective e e'
+
+slookupAll : ∀ xs ss → Enumeration (SName xs ss)
+-- List exhausted
+slookupAll xs [] = emptyEnum λ()
+-- In head?, in tail?
+slookupAll xs (ss ∷ sc) with llookupAll xs ss | slookupAll xs sc
+slookupAll xs (ss ∷ sc) | e | e' = appendEnum here there sname-surjective e e'
 
 -- Well-scoped declarations
 

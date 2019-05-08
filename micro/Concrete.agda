@@ -13,9 +13,6 @@ open import HierMod.AST public -- Export AST
 
 module _ {a b} {A : Set a}{B : Set b} where
 
-  Injective : (f : A → B)→ Set _
-  Injective f = ∀ {x y} → f x ≡ f y → x ≡ y
-
   module _ {f : A → B} (inj : Injective f) where
 
     congDec : ∀{x y} → Dec (x ≡ y) → Dec (f x ≡ f y)

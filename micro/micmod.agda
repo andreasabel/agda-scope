@@ -4,7 +4,7 @@ module micmod where
 open import Library
 open import HierMod.AST    using (Program; printProgram; printDecl)
 open import HierMod.Parser using (Err; ok; bad; parseProgram)
-open import ScopeChecker          using (checkProgram)
+open import ScopeChecker   using (checkProgram; printScopeError)
 
 check : String → IO ⊤
 check contents = do
@@ -15,7 +15,7 @@ check contents = do
       exitFailure
   inj₂ aprg ← return $ checkProgram cprg where
     (inj₁ scoperr) → do
-      putStrLn "SCOPE ERROR"
+      putStrLn ("SCOPE ERROR: " String.++ printScopeError scoperr)
       putStrLn (printProgram cprg)
       exitFailure
   putStrLn "SUCCESS"
