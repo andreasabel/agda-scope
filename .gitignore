@@ -3,6 +3,7 @@
 *.bak
 *.o
 *.hi
+*_aux
 *.aux
 *.log
 *.out
@@ -19,3 +20,4 @@ MAlonzo
 /micro/HierMod/Par.info
 /micro/HierMod/Skel.hs
 /micro/HierMod/Test
+
