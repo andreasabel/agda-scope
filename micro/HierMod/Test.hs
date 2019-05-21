@@ -12,7 +12,7 @@ import HierMod.Par
 import HierMod.Skel
 import HierMod.Print
 import HierMod.Abs
-
+import HierMod.Layout
 
 
 
@@ -20,7 +20,7 @@ import HierMod.ErrM
 
 type ParseFun a = [Token] -> Err a
 
-myLLexer = myLexer
+myLLexer = resolveLayout True . myLexer
 
 type Verbosity = Int
 

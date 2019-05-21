@@ -98,12 +98,12 @@ instance Print HierMod.Abs.Program where
 instance Print HierMod.Abs.Decl where
   prt i e = case e of
     HierMod.Abs.Modl name decls -> prPrec i 0 (concatD [doc (showString "module"), prt 0 name, doc (showString "where"), doc (showString "{"), prt 0 decls, doc (showString "}")])
-    HierMod.Abs.Ref qname -> prPrec i 0 (concatD [doc (showString "module"), doc (showString "_"), doc (showString "="), prt 0 qname])
+    HierMod.Abs.Ref qname -> prPrec i 0 (concatD [doc (showString "open"), prt 0 qname, doc (showString "using"), doc (showString "("), doc (showString ")")])
 
 instance Print HierMod.Abs.Decls where
   prt i e = case e of
     HierMod.Abs.DNil -> prPrec i 0 (concatD [])
-    HierMod.Abs.DSnoc decls decl -> prPrec i 0 (concatD [prt 0 decls, prt 0 decl])
+    HierMod.Abs.DSnoc decls decl -> prPrec i 0 (concatD [prt 0 decls, doc (showString ";"), prt 0 decl])
 
 instance Print HierMod.Abs.QName where
   prt i e = case e of

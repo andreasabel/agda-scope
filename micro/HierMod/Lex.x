@@ -21,7 +21,7 @@ $i = [$l $d _ ']     -- identifier character
 $u = [. \n]          -- universal: any character
 
 @rsyms =    -- symbols and non-identifier-like reserved words
-   \{ | \} | \_ | \= | \.
+   \{ | \} | \( | \) | \; | \.
 
 :-
 "--" [.]* ; -- Toss single line comments
@@ -30,7 +30,7 @@ $u = [. \n]          -- universal: any character
 $white+ ;
 @rsyms
     { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
-($u # [\( \) \{ \} \; \. \@ \" \  \n \t]) +
+($u # [\- \( \) \{ \} \; \. \@ \" \  \n \r \t \f]) +
     { tok (\p s -> PT p (eitherResIdent (T_Name . share) s)) }
 
 $l $i*
@@ -107,7 +107,7 @@ eitherResIdent tv s = treeFind resWords
                               | s == a = t
 
 resWords :: BTree
-resWords = b "module" 4 (b "=" 2 (b "." 1 N N) (b "_" 3 N N)) (b "{" 6 (b "where" 5 N N) (b "}" 7 N N))
+resWords = b "open" 6 (b "." 3 (b ")" 2 (b "(" 1 N N) N) (b "module" 5 (b ";" 4 N N) N)) (b "{" 9 (b "where" 8 (b "using" 7 N N) N) (b "}" 10 N N))
    where b s n = let bs = id s
                   in B bs (TS bs n)
 
@@ -117,6 +117,8 @@ unescapeInitTail = id . unesc . tail . id where
     '\\':c:cs | elem c ['\"', '\\', '\''] -> c : unesc cs
     '\\':'n':cs  -> '\n' : unesc cs
     '\\':'t':cs  -> '\t' : unesc cs
+    '\\':'r':cs  -> '\r' : unesc cs
+    '\\':'f':cs  -> '\f' : unesc cs
     '"':[]    -> []
     c:cs      -> c : unesc cs
     _         -> []

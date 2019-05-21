@@ -16,27 +16,32 @@ import HierMod.ErrM
 %monad { Err } { thenM } { returnM }
 %tokentype {Token}
 %token
-  '.' { PT _ (TS _ 1) }
-  '=' { PT _ (TS _ 2) }
-  '_' { PT _ (TS _ 3) }
-  'module' { PT _ (TS _ 4) }
-  'where' { PT _ (TS _ 5) }
-  '{' { PT _ (TS _ 6) }
-  '}' { PT _ (TS _ 7) }
+  '(' { PT _ (TS _ 1) }
+  ')' { PT _ (TS _ 2) }
+  '.' { PT _ (TS _ 3) }
+  ';' { PT _ (TS _ 4) }
+  'module' { PT _ (TS _ 5) }
+  'open' { PT _ (TS _ 6) }
+  'using' { PT _ (TS _ 7) }
+  'where' { PT _ (TS _ 8) }
+  '{' { PT _ (TS _ 9) }
+  '}' { PT _ (TS _ 10) }
   L_Name { PT _ (T_Name $$) }
 
 %%
 
-Name    :: { Name} : L_Name { Name ($1)}
+Name :: { Name}
+Name  : L_Name { Name ($1)}
 
 Program :: { Program }
 Program : 'module' Name 'where' '{' Decls '}' { HierMod.Abs.Prg $2 $5 }
 Decl :: { Decl }
 Decl : 'module' Name 'where' '{' Decls '}' { HierMod.Abs.Modl $2 $5 }
-     | 'module' '_' '=' QName { HierMod.Abs.Ref $4 }
+     | 'open' QName 'using' '(' ')' { HierMod.Abs.Ref $2 }
 Decls :: { Decls }
 Decls : {- empty -} { HierMod.Abs.DNil }
-      | Decls Decl { HierMod.Abs.DSnoc $1 $2 }
+      | Decls ';' Decl { HierMod.Abs.DSnoc $1 $3 }
+      | Decl { dSg_ $1 }
 QName :: { QName }
 QName : Name { HierMod.Abs.QName $1 }
       | Name '.' QName { HierMod.Abs.Qual $1 $3 }
@@ -50,12 +55,13 @@ thenM = (>>=)
 
 happyError :: [Token] -> Err a
 happyError ts =
-  Bad $ "syntax error at " ++ tokenPos ts ++ 
+  Bad $ "syntax error at " ++ tokenPos ts ++
   case ts of
-    [] -> []
+    []      -> []
     [Err _] -> " due to lexer error"
-    t:_ -> " before `" ++ id(prToken t) ++ "'"
+    t:_     -> " before `" ++ id(prToken t) ++ "'"
 
 myLexer = tokens
+dSg_ d_ = DSnoc DNil d_
 }
 

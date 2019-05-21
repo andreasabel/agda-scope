@@ -3,6 +3,7 @@
 
 module HierMod.Parser where
 
+open import Agda.Builtin.Bool using () renaming (Bool to #Bool)
 open import Agda.Builtin.Char using () renaming (Char to Char)
 open import Agda.Builtin.List using () renaming (List to #List)
 open import Agda.Builtin.String using () renaming
@@ -21,6 +22,7 @@ open import HierMod.AST using
 {-# FOREIGN GHC import HierMod.Abs #-}
 {-# FOREIGN GHC import HierMod.ErrM #-}
 {-# FOREIGN GHC import HierMod.Par #-}
+{-# FOREIGN GHC import qualified HierMod.Layout #-}
 
 -- Error monad of BNFC
 
@@ -36,12 +38,12 @@ data Err A : Set where
 -- Happy parsers
 
 postulate
-  parseProgram : #String → Err Program
-  parseDecl : #String → Err Decl
-  parseDecls : #String → Err Decls
-  parseQName : #String → Err QName
+  parseProgram : #Bool → #String → Err Program
+  parseDecl : #Bool → #String → Err Decl
+  parseDecls : #Bool → #String → Err Decls
+  parseQName : #Bool → #String → Err QName
 
-{-# COMPILE GHC parseProgram = pProgram . myLexer . Data.Text.unpack #-}
-{-# COMPILE GHC parseDecl = pDecl . myLexer . Data.Text.unpack #-}
-{-# COMPILE GHC parseDecls = pDecls . myLexer . Data.Text.unpack #-}
-{-# COMPILE GHC parseQName = pQName . myLexer . Data.Text.unpack #-}
+{-# COMPILE GHC parseProgram = \ tl -> pProgram . HierMod.Layout.resolveLayout tl . myLexer . Data.Text.unpack #-}
+{-# COMPILE GHC parseDecl = \ tl -> pDecl . HierMod.Layout.resolveLayout tl . myLexer . Data.Text.unpack #-}
+{-# COMPILE GHC parseDecls = \ tl -> pDecls . HierMod.Layout.resolveLayout tl . myLexer . Data.Text.unpack #-}
+{-# COMPILE GHC parseQName = \ tl -> pQName . HierMod.Layout.resolveLayout tl . myLexer . Data.Text.unpack #-}

@@ -3,6 +3,7 @@
 
 module HierMod.Main where
 
+open import Agda.Builtin.Bool using (true)
 open import HierMod.IOLib
 open import HierMod.AST using (printProgram)
 open import HierMod.Parser using (Err; parseProgram)
@@ -13,7 +14,7 @@ main = do
     _ → do
       putStrLn "usage: Main <SourceFile>"
       exitFailure
-  Err.ok result ← parseProgram <$> readFiniteFile file where
+  Err.ok result ← parseProgram true <$> readFiniteFile file where
     Err.bad msg → do
       putStrLn "PARSE FAILED\n"
       putStrLn (stringFromList msg)
