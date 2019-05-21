@@ -8,7 +8,7 @@ open import ScopeChecker   using (checkProgram; printScopeError)
 
 check : String → IO ⊤
 check contents = do
-  Err.ok cprg ← return $ parseProgram contents where
+  Err.ok cprg ← return $ parseProgram true contents where
     (bad cs) → do
       putStrLn "SYNTAX ERROR"
       putStrLn (String.fromList cs)
