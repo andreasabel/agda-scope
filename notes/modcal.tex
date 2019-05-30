@@ -81,16 +81,16 @@ $\texttt{module~\_~=}~q$ for $\mref q$.
 
 Sequences of type $\_^*$ may be empty whereas $\_^+$ stands for
 non-empty sequences.
-We write $\Ge$ for the empty sequence and use a dot %or raised dot
+We write $\Ge$ for the empty sequence and use a dot or raised dot
 for concatenation.
 We silently cast elements to singleton sequences, \eg,
 we write $x$ for $x.\Ge$.
-We write $\Gamma \chop s$ for the result of splitting the last
-statement $s$ off a scope $\Delta \sep (\Ga \sep s) \sep \Ge^*$;
-then $\Gamma = \Delta \sep \Ga$.
-% This way, $\Gamma \sep s$ makes sense, \eg,
-% $(\Delta \sep \alpha) \sep s$ means $\Delta \sep (\alpha \sep s)$,
-% and $\Ge \sep s$ (as scope) means $\Ge \sep (\Ge \sep s)$.
+% We write $\Gamma \chop s$ for the result of splitting the last
+% statement $s$ off a scope $\Delta \sep (\Ga \sep s) \sep \Ge^*$;
+% then $\Gamma = \Delta \sep \Ga$.
+% % This way, $\Gamma \sep s$ makes sense, \eg,
+% % $(\Delta \sep \alpha) \sep s$ means $\Delta \sep (\alpha \sep s)$,
+% % and $\Ge \sep s$ (as scope) means $\Ge \sep (\Ge \sep s)$.
 
 Judgements.
 \[
@@ -108,15 +108,19 @@ Judgements.
 \begin{gather*}
   \nru{\rhere
      }{
-     }{\Contains {\Gamma \chop \mdef x \beta} x}
-\qquad
-  \nru{\rinto
-     }{\Contains \beta q
-     }{\Contains {\Gamma \chop \mdef x \beta} {x.q}}
+     }{\Contains {\Gamma \sep \alpha \sep \mdef x \beta} x}
 \qquad
    \nru{\rthere
-      }{\Contains \Gamma q
-      }{\Contains {\Gamma \chop s} q}
+      }{\Contains {\Gamma \sep \alpha} q
+      }{\Contains {\Gamma \sep \alpha \sep s} q}
+\\[2ex]
+  \nru{\rinto
+     }{\Contains \beta q
+     }{\Contains {\Gamma \sep \alpha \sep \mdef x \beta} {x.q}}
+\qquad
+   \nru{\rparent
+      }{\Contains {\Gamma} q
+      }{\Contains {\Gamma \sep \alpha} q}
 \end{gather*}
 The judgement $\Contains \Gamma q$ is a decidable set, its inhabitants
 are paths to the definition site of a name.
@@ -125,22 +129,37 @@ are paths to the definition site of a name.
 % than one inhabitant.
 $\Contains \Gamma q$ may have more than one inhabitant, meaning that
 name $q$ would be ambiguous.
-We can disambiguate by always take the closest declaration as the
+We can disambiguate by always taking the closest declaration as the
 definition of a name.
 
 \fbox{$\Declares \Gamma q$} (implies $\Contains \Gamma q$).
 \begin{gather*}
   \nru{\rhere
      }{
-     }{\Declares {\Gamma \chop \mdef x \beta} x}
-\qquad
-  \nru{\rinto
-     }{\Declares \beta q
-     }{\Declares {\Gamma \chop \mdef x \beta} {x.q}}
+     }{\Declares {\Gamma \sep \alpha \sep \mdef x \beta} x}
 \qquad
    \nru{\rthere
-      }{\Declares \Gamma q \qquad \NotContains s q
-      }{\Declares {\Gamma \chop s} q}
+      }{\Declares {\Gamma \sep \alpha} q \qquad \NotContains s q
+      }{\Declares {\Gamma \sep \alpha \sep s} q}
+\\[2ex]
+  \nru{\rinto
+     }{\Declares \beta q
+     }{\Declares {\Gamma \sep \alpha \sep \mdef x \beta} {x.q}}
+\qquad
+   \nru{\rparent
+      }{\Declares {\Gamma} q \qquad \NotContains \alpha q
+      }{\Declares {\Gamma \sep \alpha} q}
+%   \nru{\rhere
+%      }{
+%      }{\Declares {\Gamma \chop \mdef x \beta} x}
+% \qquad
+%   \nru{\rinto
+%      }{\Declares \beta q
+%      }{\Declares {\Gamma \chop \mdef x \beta} {x.q}}
+% \qquad
+%    \nru{\rthere
+%       }{\Declares \Gamma q \qquad \NotContains s q
+%       }{\Declares {\Gamma \chop s} q}
 \end{gather*}
 $\Declares \Gamma q$ is a proposition, \ie, contains at most one
 inhabitant.  This inhabitant, when it exists, may be the considered
@@ -257,16 +276,16 @@ aliases can in principle be expanded.
 
 Sequences of type $\_^*$ may be empty whereas $\_^+$ stands for
 non-empty sequences.
-We write $\Ge$ for the empty sequence and use a dot %or raised dot
+We write $\Ge$ for the empty sequence and use a dot or raised dot
 for concatenation.
 We silently cast elements to singleton sequences, \eg,
 we write $x$ for $x.\Ge$.
-We write \fbox{$\Gamma \chop s$} for the result of splitting the last
-statement $s$ off a scope $\Delta \sep (\Ga \sep s) \sep \Ge^*$;
-then $\Gamma = \Delta \sep \Ga$.
-% This way, $\Gamma \sep s$ makes sense, \eg,
-% $(\Delta \sep \alpha) \sep s$ means $\Delta \sep (\alpha \sep s)$,
-% and $\Ge \sep s$ (as scope) means $\Ge \sep (\Ge \sep s)$.
+% We write \fbox{$\Gamma \chop s$} for the result of splitting the last
+% statement $s$ off a scope $\Delta \sep (\Ga \sep s) \sep \Ge^*$;
+% then $\Gamma = \Delta \sep \Ga$.
+% % This way, $\Gamma \sep s$ makes sense, \eg,
+% % $(\Delta \sep \alpha) \sep s$ means $\Delta \sep (\alpha \sep s)$,
+% % and $\Ge \sep s$ (as scope) means $\Ge \sep (\Ge \sep s)$.
 The name $x$ defined in statement $s$ is \fbox{$\defined s$}, thus,
 $\defined(\mdef x \beta) = \defined(\malias x q) = x$.
 
@@ -286,19 +305,23 @@ Judgements.
 \begin{gather*}
   \nru{\rhere
      }{
-     }{\Contains {\Gamma \chop s} {\defined s}}
+     }{\Contains {\Gamma \sep \alpha \sep \mdef x \beta} x}
 \qquad
    \nru{\rthere
-      }{\Contains \Gamma q
-      }{\Contains {\Gamma \chop s} q}
+      }{\Contains {\Gamma \sep \alpha} q
+      }{\Contains {\Gamma \sep \alpha \sep s} q}
+\qquad
+   \nru{\rparent
+      }{\Contains {\Gamma} q
+      }{\Contains {\Gamma \sep \alpha} q}
 \\[2ex]
   \nru{\rinto
      }{\Contains \beta q
-     }{\Contains {\Gamma \chop \mdef x \beta} {x.q}}
+     }{\Contains {\Gamma \sep \alpha \sep \mdef x \beta} {x.q}}
 \qquad
   \nru{\rfollow
-     }{\Contains \Gamma {q'.q}
-     }{\Contains {\Gamma \chop \malias x q'} {x.q}}
+     }{\Contains {\Gamma \sep \alpha} {q'.q}
+     }{\Contains {\Gamma \sep \alpha \sep \malias x q'} {x.q}}
 \end{gather*}
 The judgement $\Contains \Gamma q$ is a decidable set, its inhabitants
 are paths to the definition site of a name.
@@ -324,26 +347,45 @@ continues with the expanded name.
 For fixed $\Gamma$ and $q$, the set $\Contains \Gamma q$
 may have more than one inhabitant, meaning that
 name $q$ would be ambiguous.
-We can disambiguate by always take the closest declaration as the
+We can disambiguate by always taking the closest declaration as the
 definition of a name.
 
 \fbox{$\Declares \Gamma q$} (implies $\Contains \Gamma q$).
 \begin{gather*}
   \nru{\rhere
      }{
-     }{\Declares {\Gamma \chop s} {\defined s}}
+     }{\Declares {\Gamma \sep \alpha \sep \mdef x \beta} x}
 \qquad
    \nru{\rthere
-      }{\Declares \Gamma q \qquad \NotContains s q
-      }{\Declares {\Gamma \chop s} q}
+      }{\Declares {\Gamma \sep \alpha} q \qquad \NotContains s q
+      }{\Declares {\Gamma \sep \alpha \sep s} q}
+\qquad
+   \nru{\rparent
+      }{\Declares {\Gamma} q \qquad \NotContains \alpha q
+      }{\Declares {\Gamma \sep \alpha} q}
 \\[2ex]
   \nru{\rinto
      }{\Declares \beta q
-     }{\Declares {\Gamma \chop \mdef x \beta} {x.q}}
+     }{\Declares {\Gamma \sep \alpha \sep \mdef x \beta} {x.q}}
 \qquad
   \nru{\rfollow
-     }{\Declares \Gamma {q'.q}
-     }{\Declares {\Gamma \chop \malias x q'} {x.q}}
+     }{\Declares {\Gamma \sep \alpha} {q'.q}
+     }{\Declares {\Gamma \sep \alpha \sep \malias x q'} {x.q}}
+%   \nru{\rhere
+%      }{
+%      }{\Declares {\Gamma \chop s} {\defined s}}
+% \qquad
+%    \nru{\rthere
+%       }{\Declares \Gamma q \qquad \NotContains s q
+%       }{\Declares {\Gamma \chop s} q}
+% \\[2ex]
+%   \nru{\rinto
+%      }{\Declares \beta q
+%      }{\Declares {\Gamma \chop \mdef x \beta} {x.q}}
+% \qquad
+%   \nru{\rfollow
+%      }{\Declares \Gamma {q'.q}
+%      }{\Declares {\Gamma \chop \malias x q'} {x.q}}
 \end{gather*}
 $\Declares \Gamma q$ is a proposition, \ie, contains at most one
 inhabitant.  This inhabitant, when it exists, may be the considered
