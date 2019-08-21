@@ -19,10 +19,17 @@ ghcflags	=--ghc-flag=-i../haskell --ghc-flag=-Wwarn
 main=Main
 
 test : $(main)
+	@echo "---------------------------------------------------------------------------"
 	./$(main) test/Example.agda
+	@echo "---------------------------------------------------------------------------"
 	! ./$(main) test/NotInScope.agda
+	@echo "---------------------------------------------------------------------------"
 	! ./$(main) test/ScopeErr.agda
+	@echo "---------------------------------------------------------------------------"
+	! ./$(main) test/ShadowedByAmbiguous.agda
+	@echo "---------------------------------------------------------------------------"
 	! ./$(main) test/Shadowed.agda
+
 
 Main : Main.hs ScopeChecker.hs $(genfiles)
 	ghc $<
