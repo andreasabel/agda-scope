@@ -1,0 +1,70 @@
+# Makefile for microscopic module calculus
+
+## Variables
+###########################################################################
+
+grammar		=HierMod
+
+genhsfiles	=$(grammar)/Print.hs $(grammar)/ErrM.hs
+gengenhsfiles	=$(grammar)/Lex.hs $(grammar)/Par.hs
+genfiles        =$(genhsfiles) $(gengenhsfiles)
+
+ghcflags	=--ghc-flag=-i../haskell --ghc-flag=-Wwarn
+
+###########################################################################
+
+# List of goals not corresponding to file names.
+.PHONY : sdist clean distclean test parser
+
+main=Main
+
+test : $(main)
+	./$(main) test/Example.agda
+	! ./$(main) test/NotInScope.agda
+	! ./$(main) test/ScopeErr.agda
+	! ./$(main) test/Shadowed.agda
+
+Main : Main.hs ScopeChecker.hs $(genfiles)
+	ghc $<
+
+# Just the parser
+
+test-parser : $(grammar)/Test
+	$(grammar)/Test test/Example.agda
+
+# Rules to build the parser:
+
+$(grammar)/Test.hs $(grammar)/Lex.x $(grammar)/Par.y $(genhsfiles)  : $(grammar).cf
+	bnfc --haskell -d $<
+
+%.hs : %.y
+	happy -gcai $<
+#	happy --ghc --coerce --array --info $<
+
+%.hs : %.x
+	alex --ghc $<
+
+$(grammar)/Test : $(grammar)/Test.hs $(grammar)/Par.hs $(grammar)/Lex.hs
+	ghc --make $< -o $@
+
+# Rules for shipping.
+
+sdist : pure.tar.gz
+
+tmpdir := $(shell mktemp -d)
+pure.tar.gz : $(files)
+	mkdir $(tmpdir)/pure
+	cp $^ $(tmpdir)/pure/
+	tar -C $(tmpdir) -czhf $@ pure
+
+# Rules for cleaning generated files:
+
+clean :
+	-rm -f $(grammar)/*.log $(grammar)/*.aux $(grammar)/*.hi $(grammar)/*.o $(grammar)/*.dvi *.hi *.o
+
+distclean : clean
+	-rm -f $(grammar)/Doc.* $(grammar)/Lex.* $(grammar)/Par.* $(grammar)/Layout.* $(grammar)/Skel.* $(grammar)/Print.* $(grammar)/Test.* $(grammar)/Abs.* $(grammar)/Test $(grammar)/ErrM.* $(grammar)/SharedString.* $(grammar)/ComposOp.* $(grammar)/$(grammar).dtd $(grammar)/XML.* $(grammar)/*.bak $(grammar)/AST.*
+	-rmdir -p $(grammar)/
+	-rm -f pure.tar.gz pure
+
+# EOF

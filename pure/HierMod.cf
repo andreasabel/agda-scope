@@ -1,0 +1,44 @@
+-- A labelled BNFC grammar (to be processed with BNFC)
+-- describing hierarchical modules in Agda syntax.
+-- Andreas, 2019-05-04, -13, 2019-08-21
+
+-- A program is a top-level module containing a list of declarations.
+
+Prg.   Program ::= "module" Name "where" "{" [Decl] "}" ;
+
+layout "where"  ;
+
+-- Declarations are modules or references to modules.
+
+-- A new module with content.  The module can be public or private.
+Modl.         Decl ::= "module" Name "where" "{" [Decl] "}"           ;
+PrivateModl.  Decl ::= "private" "module" Name "where" "{" [Decl] "}" ;
+-- Importing public content from another module, as private or public.
+Open.         Decl ::= "open" [Name]          ;
+OpenPublic.   Decl ::= "open" [Name] "public" ;
+
+separator Decl ";" ;
+
+-- [].    [Decl] ::=                ;
+-- (:).   [Decl] ::= Decl ";" [Decl] ;
+-- (:[]). [Decl] ::= Decl           ;
+
+-- Qualified identifiers: non-empty lists of identifiers.
+-- Should not allow spaces around the ".", but this is not easily expressed in BNFC.
+
+separator nonempty Name "." ;
+
+-- Identifiers.
+
+-- token Name (char - [ "-(){};.@\" \n\t" ]) + ;  -- The released BNFC does not understand \n and \t
+token Name (char - [ "-(){};.@\" \n\r\t\f" ]) + ;
+  -- Both too liberal and too restrictive:
+  -- Only excluding Agdas reserved symbols (too liberal).
+  -- Excluding "-" for the sake of comments (too restrictive).
+
+-- Comments.
+
+comment "--"      ;  -- line comment
+comment "{-" "-}" ;  --  non-nested block comment
+
+-- EOF
