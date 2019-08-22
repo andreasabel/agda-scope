@@ -13,8 +13,11 @@ cache: packages
 #   - docker pull adnrv/texlive:custom
 # texlive/texlive
 
+before_install:
+  - tlmgr install unicode-math microtype parskip fancyvrb
+
 install:
-  - echo "Empty install script"
+  - echo "Empty install script"  # leaving 'install:' totally empty does not work
 
 script:
   - make docs
