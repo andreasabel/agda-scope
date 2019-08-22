@@ -1,5 +1,5 @@
 # dist: trusty
-language: r
+language: generic
 sudo: required
 cache: packages
 
@@ -14,8 +14,8 @@ cache: packages
 # texlive/texlive
 
 before_install:
-#  - sudo apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-math-extra
-  - tlmgr install filehook 
+  - sudo apt-get -qq update && sudo apt-get install -y pandoc texlive-latex-extra texlive-math-extra
+#  - tlmgr install filehook
 # unicode-math
 
 install:
