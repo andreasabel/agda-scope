@@ -175,7 +175,7 @@ checkOpen :: QName -> Access -> ScopeM ()
 checkOpen q acc = do
   u <- uname <$> lookupModule q
   m <- getModule u
-  importContent $ keepPublicAs acc u m
+  addContent $ keepPublicAs acc u m
 
 -- * Components
 
@@ -192,20 +192,34 @@ closeModule = do
   defineModule u m
   return u
 
+-- | Merge given content into current module.
+--   Public import fails if it generates clashes with public names.
+
+addContent :: ModuleContent -> ScopeM ()
+addContent m = modifyCurrentModuleM $ \ orig -> do
+  let mergeNameSets' ea eb = do { a <- ea; b <- eb; mergeNameSets a b }
+  let (bad, good) =
+        Map.mapEitherWithKey (\ x -> bimap (x,) id) $
+          Map.unionWith mergeNameSets' (fmap Right orig) (fmap Right m)
+  if Map.null bad
+    then return good
+    else throwError $ ConflictPublic $ map fst $ Map.toList bad
+
 -- | Add a binding to the current module.
 
 addBind :: Name -> UName -> Access -> ScopeM ()
-addBind x u a = modifyCurrentModuleM $ \ m ->
-  case Map.lookup x m of
-    -- x is not bound yet
-    Nothing -> return $ Map.insert x ns1 m
-    -- x is already bound: make sure to not shadow public.
-    Just amb ->
-      case unionMaybe amb ns1 of
-        Nothing   -> throwError $ ConflictPublic [x]
-        Just amb' -> return $ Map.insert x amb' m
-  where
-  ns1 = unambiguousName a $ AName u Defined
+addBind x u a = addContent $ Map.singleton x $ unambiguousName a $ AName u Defined
+-- addBind x u a = modifyCurrentModuleM $ \ m ->
+--   case Map.lookup x m of
+--     -- x is not bound yet
+--     Nothing -> return $ Map.insert x ns1 m
+--     -- x is already bound: make sure to not shadow public.
+--     Just amb ->
+--       case unionMaybe amb ns1 of
+--         Nothing   -> throwError $ ConflictPublic [x]
+--         Just amb' -> return $ Map.insert x amb' m
+--   where
+--   ns1 = unambiguousName a $ AName u Defined
 
 -- | Lookup module in current scope and return its uid.
 --   Commits to the parent that contains the head.
@@ -259,19 +273,6 @@ getModule u =
 
 keepPublicAs :: Access -> UName -> ModuleContent -> ModuleContent
 keepPublicAs acc u = Map.mapMaybe $ keepPublicAs' acc u
-
--- | Merge given content into current module.
---   Public import fails if it generates clashes with public names.
-
-importContent :: ModuleContent -> ScopeM ()
-importContent m = modifyCurrentModuleM $ \ orig -> do
-  let mergeNameSets' ea eb = do { a <- ea; b <- eb; mergeNameSets a b }
-  let (bad, good) =
-        Map.mapEitherWithKey (\ x -> bimap (x,) id) $
-          Map.unionWith mergeNameSets' (fmap Right orig) (fmap Right m)
-  if Map.null bad
-    then return good
-    else throwError $ ConflictPublic $ map fst $ Map.toList bad
 
 
 -- * Basic data structure manipulations
