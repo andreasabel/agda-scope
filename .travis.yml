@@ -14,8 +14,9 @@ cache: packages
 # texlive/texlive
 
 before_install:
-  - sudo apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-math-extra
-  - tlmgr install unicode-math filehook
+#  - sudo apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-math-extra
+  - tlmgr install filehook 
+# unicode-math
 
 install:
   - echo "Empty install script"  # leaving 'install:' totally empty does not work

@@ -131,7 +131,7 @@ endif
 ##################################################################
 
 %.pdf : %.tex
-	xelatex -halt-on-error $<
+	xelatex -halt-on-error -interaction=batchmode $<
 
 PANDOC_OPTS=-s -V monofont='DejaVu Sans Mono'
 #  -V mainfont='DejaVu Sans Mono'
