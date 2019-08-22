@@ -52,6 +52,8 @@ default : agdaShadowing.pdf
 
 all : agdaShadowing.pdf modcal.pdf
 
+deploy : agdaShadowing.pdf
+
 ship : $(destdir)/modcal.pdf
 
 $(destdir)/% : %
