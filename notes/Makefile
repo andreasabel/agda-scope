@@ -48,7 +48,9 @@ files=
 
 .PRECIOUS : $(lagdaFilesConvertedToTex) $(lagdaFilesConvertedToTexAfterSed)
 
-default : modcal.pdf
+default : agdaShadowing.pdf
+
+all : agdaShadowing.pdf modcal.pdf
 
 ship : $(destdir)/modcal.pdf
 
@@ -125,6 +127,15 @@ endif
 
 # Templates
 ##################################################################
+
+%.pdf : %.tex
+	xelatex $<
+
+PANDOC_OPTS=-s -V monofont='DejaVu Sans Mono'
+#  -V mainfont='DejaVu Sans Mono'
+
+%.tex : %.md Makefile %.yaml
+	cat $*.yaml $< | pandoc $(PANDOC_OPTS) -o $@
 
 latex-before-sed/%.tex : %.lagda
 	$(agda) --latex --latex-dir=latex-before-sed $<
