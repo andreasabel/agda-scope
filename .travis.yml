@@ -7,14 +7,11 @@ cache: packages
 #   - docker
 
 # before_install:
-#   - sudo apt-get -q update
-#   - sudo apt-get install -y texlive-latex-extra texlive-math-extra texlive-xetex
 #   - docker pull jlimperg/agda-stdlib
 #   - docker pull adnrv/texlive:custom
-# texlive/texlive
 
 before_install:
-  - sudo apt-get -qq update && sudo apt-get install -y pandoc texlive-latex-extra texlive-math-extra
+  - sudo apt-get -qq update && sudo apt-get install -y pandoc texlive-latex-extra texlive-math-extra texlive-xetex
 #  - tlmgr install filehook
 # unicode-math
 
