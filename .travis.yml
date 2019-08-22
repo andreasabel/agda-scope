@@ -15,7 +15,7 @@ cache: packages
 
 before_install:
   - sudo apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-math-extra
-#  - tlmgr install unicode-math filehook microtype parskip fancyvrb
+  - tlmgr install unicode-math filehook
 
 install:
   - echo "Empty install script"  # leaving 'install:' totally empty does not work
