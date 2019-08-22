@@ -168,6 +168,15 @@ restrictions, e.g, we can always swap the following two statments
 ```
 if the content of `ds` is independent from the content of `M`.
 
+<!-- NOT VERY GENERAL:
+Further, `open` is reasonably compositional.  In a pristine module,
+`open M₁.M₂ public` can be decomposed into:
+```agda
+    open M₁
+    open M₂ public
+```
+-->
+
 A bit debatable is the permission to shadow a public import via a
 private definition:
 
@@ -195,7 +204,19 @@ reason to reject the code below:
       open L public
 ```
 
-### Remark: relation to export lists
+### Shadowing of definitions in parent modules
+
+Current Agda (2.6.0) does not allow defining names that are already in scope.  In contrast, our principle 2 only rules out shadowing definitions of the current module.
+
+> Principle 4.
+> Definitions in parent modules may be shadowed.
+
+This is the topic of Agda enhancement request
+[#3801](https://github.com/agda/agda/issues/3801).
+Many of the examples presented so far utilize principle 4.
+
+
+### Remark: accessibility in relation to export lists
 
 In Agda, accessiblity information is attached to names _introduced_
 into module. This is similar to accessibility modifiers in classes in
@@ -319,7 +340,7 @@ The third argument of `lookFor` is the `continuation` that is only invoked shoul
 
 (The skilled functional programmer will spot that `loop` is nothing but `foldr (lookFor q) err`.)
 
-# Related Work
+## Related Work
 
 Ulf Norell [1] described in 2006 the design of module system for
 Agda and its informal semantics.  At that time, Agda 2 was in the prototyping
