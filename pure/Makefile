@@ -29,6 +29,8 @@ test : $(main)
 	! ./$(main) test/ShadowedByAmbiguous.agda
 	@echo "---------------------------------------------------------------------------"
 	! ./$(main) test/Shadowed.agda
+	@echo "---------------------------------------------------------------------------"
+	! ./$(main) test/ShadowPrivate.agda
 
 
 Main : Main.hs ScopeChecker.hs $(genfiles)
