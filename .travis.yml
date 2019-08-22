@@ -12,8 +12,7 @@ cache: packages
 
 before_install:
   - sudo apt-get -qq update && sudo apt-get install -y pandoc texlive-latex-extra texlive-math-extra texlive-xetex
-#  - tlmgr install filehook
-# unicode-math
+#  - tlmgr install filehook unicode-math
 
 install:
   - echo "Empty install script"  # leaving 'install:' totally empty does not work
