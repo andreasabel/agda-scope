@@ -18,6 +18,7 @@ import Control.Monad.State
 import Data.Bifunctor
 import Data.Foldable (Foldable, foldMap)
 import Data.Function
+import qualified Data.List as List
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
@@ -126,7 +127,9 @@ data ScopeError
   = NotInScopeError QName
   | AmbiguousName QName
   | ConflictPublic [Name]
+  -- Internal errors (should be impossible):
   | ImpossibleUndefined UName
+  | ImpossibleEmptyStack
   deriving Show
 
 data ScopeState = ScopeState
@@ -413,7 +416,7 @@ push e = cxt %= (e:)
 
 pop :: ScopeM Entry
 pop = do
-  (e:es) <- use cxt
+  (e, es) <- maybe (throwError ImpossibleEmptyStack) return . List.uncons =<< use cxt
   cxt .= es
   return e
 
@@ -492,6 +495,7 @@ instance Pretty ScopeError where
     ConflictPublic [x]    -> "Name " <+> pretty x <+> " has" <+> rest
     ConflictPublic xs     -> "Names " <+> hcat (punctuate ", " $ map pretty xs) <+> " have" <+> rest
     ImpossibleUndefined u -> "Panic: couldn't find the definition of module " <+> pretty u
+    ImpossibleEmptyStack  -> "Panic: unexpected empty module stack"
     where rest = "already a definition or public import"
 
 -- * Lens tools
