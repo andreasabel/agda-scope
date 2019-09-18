@@ -89,7 +89,7 @@ instance Print Double where
   prt _ x = doc (shows x)
 
 instance Print HierMod.Abs.Name where
-  prt _ (HierMod.Abs.Name i) = doc (showString i)
+  prt _ (HierMod.Abs.Name i) = doc $ showString $ i
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString "."), prt 0 xs]
 

@@ -5,7 +5,6 @@ module HierMod.Par where
 import HierMod.Abs
 import HierMod.Lex
 import HierMod.ErrM
-
 }
 
 %name pProgram Program
@@ -59,7 +58,7 @@ happyError ts =
   case ts of
     []      -> []
     [Err _] -> " due to lexer error"
-    t:_     -> " before `" ++ id(prToken t) ++ "'"
+    t:_     -> " before `" ++ (prToken t) ++ "'"
 
 myLexer = tokens
 }

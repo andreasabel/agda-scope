@@ -5,8 +5,6 @@
 {-# OPTIONS_GHC -w #-}
 module HierMod.Lex where
 
-
-
 import qualified Data.Bits
 import Data.Word (Word8)
 import Data.Char (ord)
@@ -86,12 +84,12 @@ mkPosToken t@(PT p _) = (posLineCol p, prToken t)
 
 prToken :: Token -> String
 prToken t = case t of
-  PT _ (TS s _) -> s
+  PT _ (TS s _) -> id s
   PT _ (TL s)   -> show s
-  PT _ (TI s)   -> s
-  PT _ (TV s)   -> s
-  PT _ (TD s)   -> s
-  PT _ (TC s)   -> s
+  PT _ (TI s)   -> id s
+  PT _ (TV s)   -> id s
+  PT _ (TD s)   -> id s
+  PT _ (TC s)   -> id s
   Err _         -> "#error"
   PT _ (T_Name s) -> s
 
