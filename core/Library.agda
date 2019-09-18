@@ -17,8 +17,8 @@ open import Data.String                           public using (String; _≟_)
 open import Data.List.Base                        public using (List; []; _∷_; map)
 open import Data.List.Membership.Propositional    public using (_∈_)
 open import Data.List.Relation.Unary.Any          public using (here; there)
-open import Data.List.Categorical                 public using (mapM)
-
+open import Data.List.Categorical                 public using (module TraversableM)
+open TraversableM public using (mapM)
 open import Data.List.NonEmpty                    public using (List⁺; _∷_; _∷⁺_)
 
 open import Function                              public using (id; _∘_; _∘′_; _$_; case_of_)
@@ -68,6 +68,8 @@ postulate
   putStrLn       : String → IO ⊤
   readFiniteFile : String → IO String
 
+-- Workaround ghc 8.4 and 8.6:
+-- {-# COMPILE GHC exitFailure    = \ _ _ -> System.IO.putStrLn "Exiting..." >> System.Exit.exitFailure #-}
 {-# COMPILE GHC exitFailure    = \ _ _ -> System.Exit.exitFailure #-}
 {-# COMPILE GHC getArgs        = map Data.Text.pack <$> System.Environment.getArgs #-}
 {-# COMPILE GHC putStrLn       = System.IO.putStrLn . Data.Text.unpack #-}

@@ -72,7 +72,7 @@ instance
   c→p-List .c→p = map c→p
 
   c→p-Name : C→P C.Name P.Ident
-  c→p-Name .c→p =  P.ident ∘ String.toList
+  c→p-Name .c→p = P.ident
 
   {-# TERMINATING #-}
   c→p-QName : C→P C.QName P.QName
