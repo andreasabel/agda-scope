@@ -12,6 +12,7 @@ module HierMod.Print where
 
 import qualified HierMod.Abs
 import Data.Char
+import qualified Data.Text
 
 -- | The top-level printing method.
 
@@ -89,7 +90,7 @@ instance Print Double where
   prt _ x = doc (shows x)
 
 instance Print HierMod.Abs.Name where
-  prt _ (HierMod.Abs.Name i) = doc (showString i)
+  prt _ (HierMod.Abs.Name i) = doc $ showString $ Data.Text.unpack i
 
 instance Print HierMod.Abs.Program where
   prt i e = case e of

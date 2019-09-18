@@ -30,10 +30,10 @@ postulate
   injStringFromList : Injective String.fromList
 
 _≟_ : (x y : Name) → Dec (x ≡ y)
-name x ≟ name y =
-  congDec injName $
-  injDec injStringFromList $
-  String.fromList x == String.fromList y
+name x ≟ name y = congDec injName $ x == y
+  -- congDec injName $
+  -- injDec injStringFromList $
+  -- String.fromList x == String.fromList y
 
   -- open import Library using (module String) renaming (primStringEquality to _==_)
 

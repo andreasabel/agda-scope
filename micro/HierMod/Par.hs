@@ -8,6 +8,7 @@ module HierMod.Par where
 import HierMod.Abs
 import HierMod.Lex
 import HierMod.ErrM
+import qualified Data.Text
 import qualified Data.Array as Happy_Data_Array
 import qualified Data.Bits as Bits
 import qualified GHC.Exts as Happy_GHC_Exts
@@ -254,7 +255,7 @@ happyError ts =
   case ts of
     []      -> []
     [Err _] -> " due to lexer error"
-    t:_     -> " before `" ++ id(prToken t) ++ "'"
+    t:_     -> " before `" ++ (prToken t) ++ "'"
 
 myLexer = tokens
 dSg_ d_ = DSnoc DNil d_

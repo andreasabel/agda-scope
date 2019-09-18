@@ -21,7 +21,6 @@ open import Data.List.Membership.Propositional    public using (_∈_)
 open import Data.List.Membership.Propositional.Properties
                                                   public using (∈-map⁺; ∈-++⁺ˡ; ∈-++⁺ʳ)
 open import Data.List.Relation.Unary.Any          public using (Any; here; there)
-open import Data.List.Categorical                 public using (mapM)
 
 open import Data.List.NonEmpty                    public using (List⁺; _∷_; _∷⁺_)
 

@@ -3,7 +3,9 @@
 
 module HierMod.Abs where
 
-newtype Name = Name String
+import qualified Data.Text
+
+newtype Name = Name Data.Text.Text
   deriving (Eq, Ord, Show, Read)
 
 data Program = Prg Name Decls

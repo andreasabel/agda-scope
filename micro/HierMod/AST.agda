@@ -17,7 +17,7 @@ open import Agda.Builtin.String using () renaming
 {-# FOREIGN GHC import HierMod.Print (printTree) #-}
 
 data Name : Set where
-  name : #List Char → Name
+  name : #String → Name
 
 {-# COMPILE GHC Name = data Name (Name) #-}
 

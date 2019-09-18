@@ -5,8 +5,7 @@
 {-# OPTIONS_GHC -w #-}
 module HierMod.Lex where
 
-
-
+import qualified Data.Text
 import qualified Data.Bits
 import Data.Word (Word8)
 import Data.Char (ord)
@@ -42,20 +41,20 @@ $l $i*
 
 {
 
-tok :: (Posn -> String -> Token) -> (Posn -> String -> Token)
+tok :: (Posn -> Data.Text.Text -> Token) -> (Posn -> Data.Text.Text -> Token)
 tok f p s = f p s
 
-share :: String -> String
+share :: Data.Text.Text -> Data.Text.Text
 share = id
 
 data Tok =
-   TS !String !Int    -- reserved words and symbols
- | TL !String         -- string literals
- | TI !String         -- integer literals
- | TV !String         -- identifiers
- | TD !String         -- double precision float literals
- | TC !String         -- character literals
- | T_Name !String
+   TS !Data.Text.Text !Int    -- reserved words and symbols
+ | TL !Data.Text.Text         -- string literals
+ | TI !Data.Text.Text         -- integer literals
+ | TV !Data.Text.Text         -- identifiers
+ | TD !Data.Text.Text         -- double precision float literals
+ | TC !Data.Text.Text         -- character literals
+ | T_Name !Data.Text.Text
 
  deriving (Eq,Show,Ord)
 
@@ -86,19 +85,19 @@ mkPosToken t@(PT p _) = (posLineCol p, prToken t)
 
 prToken :: Token -> String
 prToken t = case t of
-  PT _ (TS s _) -> s
+  PT _ (TS s _) -> Data.Text.unpack s
   PT _ (TL s)   -> show s
-  PT _ (TI s)   -> s
-  PT _ (TV s)   -> s
-  PT _ (TD s)   -> s
-  PT _ (TC s)   -> s
+  PT _ (TI s)   -> Data.Text.unpack s
+  PT _ (TV s)   -> Data.Text.unpack s
+  PT _ (TD s)   -> Data.Text.unpack s
+  PT _ (TC s)   -> Data.Text.unpack s
   Err _         -> "#error"
-  PT _ (T_Name s) -> s
+  PT _ (T_Name s) -> Data.Text.unpack s
 
 
-data BTree = N | B String Tok BTree BTree deriving (Show)
+data BTree = N | B Data.Text.Text Tok BTree BTree deriving (Show)
 
-eitherResIdent :: (String -> Tok) -> String -> Tok
+eitherResIdent :: (Data.Text.Text -> Tok) -> Data.Text.Text -> Tok
 eitherResIdent tv s = treeFind resWords
   where
   treeFind N = tv s
@@ -108,11 +107,11 @@ eitherResIdent tv s = treeFind resWords
 
 resWords :: BTree
 resWords = b "open" 6 (b "." 3 (b ")" 2 (b "(" 1 N N) N) (b "module" 5 (b ";" 4 N N) N)) (b "{" 9 (b "where" 8 (b "using" 7 N N) N) (b "}" 10 N N))
-   where b s n = let bs = id s
+   where b s n = let bs = Data.Text.pack s
                   in B bs (TS bs n)
 
-unescapeInitTail :: String -> String
-unescapeInitTail = id . unesc . tail . id where
+unescapeInitTail :: Data.Text.Text -> Data.Text.Text
+unescapeInitTail = Data.Text.pack . unesc . tail . Data.Text.unpack where
   unesc s = case s of
     '\\':c:cs | elem c ['\"', '\\', '\''] -> c : unesc cs
     '\\':'n':cs  -> '\n' : unesc cs
@@ -144,9 +143,9 @@ type Byte = Word8
 type AlexInput = (Posn,     -- current position,
                   Char,     -- previous char
                   [Byte],   -- pending bytes on the current char
-                  String)   -- current input string
+                  Data.Text.Text)   -- current input string
 
-tokens :: String -> [Token]
+tokens :: Data.Text.Text -> [Token]
 tokens str = go (alexStartPos, '\n', [], str)
     where
       go :: AlexInput -> [Token]
@@ -155,14 +154,14 @@ tokens str = go (alexStartPos, '\n', [], str)
                 AlexEOF                   -> []
                 AlexError (pos, _, _, _)  -> [Err pos]
                 AlexSkip  inp' len        -> go inp'
-                AlexToken inp' len act    -> act pos (take len str) : (go inp')
+                AlexToken inp' len act    -> act pos (Data.Text.take len str) : (go inp')
 
 alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
 alexGetByte (p, c, (b:bs), s) = Just (b, (p, c, bs, s))
 alexGetByte (p, _, [], s) =
-  case  s of
-    []  -> Nothing
-    (c:s) ->
+  case Data.Text.uncons s of
+    Nothing  -> Nothing
+    Just (c,s) ->
              let p'     = alexMove p c
                  (b:bs) = utf8Encode c
               in p' `seq` Just (b, (p', c, bs, s))
