@@ -1,12 +1,12 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFunctor     #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE TypeFamilies #-}  -- For type equality
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE Rank2Types        #-}
+{-# LANGUAGE TupleSections     #-}
+{-# LANGUAGE TypeFamilies      #-}  -- For type equality
+{-# LANGUAGE TemplateHaskell   #-}
 
 
 module ScopeChecker where
@@ -132,6 +132,7 @@ data ScopeError
   | ImpossibleEmptyStack
   deriving Show
 
+-- | State manipulated by the scope checker.
 data ScopeState = ScopeState
   { _sig :: Signature
   , _cxt :: Context
@@ -152,17 +153,15 @@ checkProgram (Prg x ds) = bimap pretty (pretty . _sig) $
 
 checkDecl :: Decl -> ScopeM ()
 checkDecl = \case
-  Modl x ds        -> checkModule Public x ds
+  Modl        x ds -> checkModule Public  x ds
   PrivateModl x ds -> checkModule Private x ds
-  Open q           -> checkOpen q Private
-  OpenPublic q     -> checkOpen q Public
+  Open        q    -> checkOpen q Private
+  OpenPublic  q    -> checkOpen q Public
 
 -- | Check module and bind to x.
 
 checkModule :: Access -> Name -> [Decl] -> ScopeM ()
-checkModule acc x ds = do
-  u <- checkModule' x ds
-  addBind x u acc
+checkModule acc x ds = addBind x acc =<< checkModule' x ds
 
 -- | Check module, don't bind it, but return its uid.
 
@@ -210,19 +209,8 @@ addContent m = modifyCurrentModuleM $ \ orig -> do
 
 -- | Add a binding to the current module.
 
-addBind :: Name -> UName -> Access -> ScopeM ()
-addBind x u a = addContent $ Map.singleton x $ unambiguousName a $ AName u Defined
--- addBind x u a = modifyCurrentModuleM $ \ m ->
---   case Map.lookup x m of
---     -- x is not bound yet
---     Nothing -> return $ Map.insert x ns1 m
---     -- x is already bound: make sure to not shadow public.
---     Just amb ->
---       case unionMaybe amb ns1 of
---         Nothing   -> throwError $ ConflictPublic [x]
---         Just amb' -> return $ Map.insert x amb' m
---   where
---   ns1 = unambiguousName a $ AName u Defined
+addBind :: Name -> Access -> UName -> ScopeM ()
+addBind x a u = addContent $ Map.singleton x $ unambiguousName a $ AName u Defined
 
 -- | Lookup module in current scope and return its uid.
 --   Commits to the parent that contains the head.
@@ -231,6 +219,7 @@ lookupModule :: QName -> ScopeM AName
 lookupModule q = foldr (lookupInContentM q) err =<< currentScope
   where
   err = throwError $ NotInScopeError q
+
   -- | Lookup qualified name in module content (recursively).
   lookupInContentM :: QName -> ModuleContent -> ScopeM AName -> ScopeM AName
   lookupInContentM (x:xs) m cont =
@@ -239,9 +228,11 @@ lookupModule q = foldr (lookupInContentM q) err =<< currentScope
       Ambiguous us  -> throwError $ AmbiguousName q
       InScope y
         | null xs   -> return y
-        | otherwise -> getModule (uname y) >>= \ m -> lookupInContentM xs m err
-          -- Once the head x matched, we cannot go back.
-          -- We discard the continuation, replace it by the not-in-scope error.
+        | otherwise -> do
+            m <- getModule (uname y)
+            lookupInContentM xs m err
+              -- Once the head x matched, we cannot go back.
+              -- We discard the continuation, replace it by the not-in-scope error.
 
 -- | Lookup module in current scope.  (Alternative, problematic.)
 --   Does not commit on matching heads.
@@ -288,7 +279,7 @@ emptyModule = Map.empty
 data InScope a
   = NotInScope
   | InScope a
-  | Ambiguous [a]
+  | Ambiguous [a]  -- ^ List of length ≥ 2.
 
 -- | Search for a name in a module.
 
