@@ -35,9 +35,9 @@ BNF-style rules.
       ::= 'private'                -- not exported
         | 'public'                 -- exported
 ```
-The access modifier _a_ in module definitions defaults to `public`,
-and in imports to `private`.  In Agda's concrete syntax, access
-modifiers are only present when diverting from the default.
+The access modifier _a_ defaults to `public` in module definitions,
+and to `private` in imports.  In Agda's concrete syntax, access
+modifiers are only present when diverging from the default.
 
 Module references _q_ such as in the `open` statement are always
 _relative_ to the current point of view.
@@ -57,7 +57,7 @@ It can, for instance, be organized as a map
 from pairs _(o,a)_ to finite sets of `AName`.
 -->
 
-The value of a module is relative to a signature, which is finite map
+The value of a module is relative to a signature, which is a finite map
 from absolute names _u_ to their contents _m_.  For our purposes, one
 global such signature _Σ_ is sufficient which is extended
 whenever a new module is fully defined.
@@ -133,13 +133,14 @@ imports, even not for private identifiers.
 > A name can only have a single __definition__ in a module.
 
 Thus, we may not define the same name `x` twice via `module x
-where...`, regardless of its accessibility.  That even a private
-definition cannot be shadowed by a public definition, is maybe a bit
-surprising.  But to the human eye, having two definitions of the same
+where...`, regardless of its accessibility.  It may be a bit
+surprising that even a private definition cannot be shadowed
+by a public definition.
+But to the human eye, having two definitions of the same
 name in the same context is confusing.  Also, since they have the same
 absolute name, those names cannot be refered to sensibly in a unique
-way, unless we let the accessiblity modifier be part of the name,
-complications we spare ourselvs.
+way, unless we let the accessiblity modifier be part of the name ---
+complications we spare ourselves.
 
 Formally, a wellformed `NameSet` contains at most a single triple of
 the form _(_`def`_,a,u)_.
@@ -150,11 +151,12 @@ the current module.
 
 ### Reasonable permutability
 
-These principles do not contradict the following guarantee:
+The two principles we have seen so far
+do not contradict the following guarantee:
 
 > Principle 3.
 > In a well-formed module that has only _external_ imports, shuffling
-> the statments never introduces a `PublicConflict` or
+> the statements never introduces a `PublicConflict` or
 > `DuplicateDefinition` error.
 
 Restricting to the import from _external_ modules is essential,
@@ -177,7 +179,7 @@ Further, `open` is reasonably compositional.  In a pristine module,
 ```
 -->
 
-A bit debatable is the permission to shadow a public import via a
+Slightly debatable is the permission to shadow a public import via a
 private definition:
 
 ```agda
@@ -213,7 +215,8 @@ Current Agda (2.6.0) does not allow defining names that are already in scope.  I
 
 This is the topic of Agda enhancement request
 [#3801](https://github.com/agda/agda/issues/3801).
-Many of the examples presented so far utilize principle 4.
+Principle 4 is utilized by
+many of the examples presented so far.
 
 
 ### Remark: accessibility in relation to export lists
@@ -234,15 +237,24 @@ Haskell does have a remedy for this, though: qualified exports.
 ## Formal specification
 
 Let us specify the evaluation rules for declarations _d_ via
-pseudo-code, which operates in a monad `ScopeM` which is a state monad for the global signature _Σ_ (a heap) and the context _Γ_, a stack of unfinished modules represented by pairs _(x,m)_ of names and current module content _m_.
+pseudo-code which operates on a state consisting of the following
+data:
 
-Service functions concerning the signature are:
+  1. the global signature _Σ_, a heap mapping unique names _u_ to
+     their content _m_, and
+  2. the context _Γ_, a stack of unfinished modules represented by
+     pairs _(x,m)_ of names _x_ and current module content _m_.
+
+(The state can be managed via a state monad which we call `ScopeM`.)
+
+Service functions concerning the signature _Σ_ are:
 
   * `m ← getModule u` retrieves the contents `m` of the module designated by pointer `u`.
 
-  * `u ← allocModule q m` allocates a new module with absolute name `q` and content `m` and returns its uid (pointer) `u`.
+  * `u ← allocModule q m` allocates a new module with absolute name
+    `q` and content `m` and returns its uid  `u` (pointer into the heap).
 
-Service functions of the stack are, beyond
+Service functions of the stack _Γ_ are, beyond
 
   * `push (x,m)` and `(x,m) ← pop`
 
@@ -252,7 +264,7 @@ two functions to unzip the stack into a list of names and a list of contents:
 
   * `Γ ← cxt` returns the module contents of the whole stack,
     as a list with the top of the stack first.
-    This is the context in which to resolve names.
+    This is the context in which we resolve names.
 
 More complex services will be defined from these primitive services below.
 
@@ -265,11 +277,11 @@ context according to `d`.
       for d ∈ ds
         checkDecl d
       u ← closeModule
-      addContent { x↦('def',a,u) }
+      addContent { x ↦ ('def',a,u) }
 
     checkDecl ('open' q a) = do
       m ← lookupModuleContent q
-      addContent { x↦('imp',a,u) | x↦(_,'public',u) ∈ m }
+      addContent { x ↦ ('imp',a,u) | x ↦ (_,'public',u) ∈ m }
 ```
 The bracketing `newModule` / `closeModule` has a straightforward definition:
 ```haskell
@@ -281,20 +293,32 @@ The bracketing `newModule` / `closeModule` has a straightforward definition:
       u      ← allocModule q m
       return u
 ```
-The function `addContent` introduces new denotations into the current module, which on is the top of the stack.  They may introduce ambiguity violating principles 1 and 2; thus we check for such conflicts.
+The function `addContent` introduces new denotations into the current
+module, which is the top of the stack.  The addition may introduce
+ambiguity violating principles 1 and 2; thus, we check for such
+conflicts.
 ```haskell
     addContent m₂ = do
       (x, m₁) ← pop
       let m = m₁ ∪ m₂
-      if ∃x,u₁≠u₂. { x↦(_,'public',u₁), x↦(_,'public',u₂) } ⊆ m
+      if ∃x,u₁≠u₂. { x ↦ (_,'public',u₁), x ↦ (_,'public',u₂) } ⊆ m
          raise PublicConflict
-      if ∃x,u₁≠u₂. { x↦('def',_,u₁), x↦('def',_,u₂) } ⊆ m
+      if ∃x,u₁≠u₂. { x ↦ ('def',_,u₁), x ↦ ('def',_,u₂) } ⊆ m
          raise DuplicateDefinition
       push (x, m)
 ```
-Finally, `m ← lookupModuleContent q` resolves reference `q` and returns its value `m`.  The reference might be undefined or ambiguous; then we raise `NotInScope` or `AmbiguousName`, respectively.
 
-The name `q` might resolve in the current module or any of its parents.  Thus we need to work through the whole context (stack) `Γ`.  A naive procedure would first look for `q` in the current module (top of the stack), and when catching `NotInScope` continue recursively with the remaining modules in the stack.  However, this would succeed for the following example:
+Finally, `m ← lookupModuleContent q` resolves reference `q` and
+returns its value `m`.  The reference might be undefined or ambiguous;
+then we raise `NotInScope` or `AmbiguousName`, respectively.
+
+The name `q` might resolve in the current module or any of its
+parents.  Thus we need to work through the whole context (stack) `Γ`.
+A naive procedure would first look for `q` in the current module (top
+of the stack), and when catching `NotInScope` continue recursively
+with the remaining modules in the stack.  However, this would succeed
+for the following example:
+
 ```agda
     module Top where
       module M where
@@ -304,7 +328,16 @@ The name `q` might resolve in the current module or any of its parents.  Thus we
         module M where
         open M.N
 ```
-While `M.N` is not defined in the current module `O`, it is in its parent module `Top`, thus, the `open` statement succeeds.  However, this procedure suggest a different semantics of modules: maps from _qualified_ names `q` to module contents, rather than maps from simple names `x`.  In essence, this blends the contents of the current module and its parents together, where child content shadows parent content.  The `open` statement would lose its compositionality; the following example does not succeed:
+
+While `M.N` is not defined in the current module `O`, it _is_ defined
+in its parent module `Top`, thus, the `open` statement succeeds.
+However, this procedure suggest a different semantics of modules: maps
+from _qualified_ names `q` to module contents, rather than maps from
+simple names `x`.  In essence, this blends the contents of the current
+module and its parents together, where child content shadows parent
+content.  The `open` statement would lose its compositionality; the
+following example does not succeed:
+
 ```agda
     module Top where
       module M where
@@ -315,9 +348,17 @@ While `M.N` is not defined in the current module `O`, it is in its parent module
         open M
         open N
 ```
-That `open M.N` should succeed but not `open M` followed by `open N` feels problematic.  One would naturally expect that `M` has a submodule `N` which one can bring into scope by opening `M`.
 
-The correct resolution of `q` should go through the stack, but commit to one stack element `m` as soon as the head of `q` can be resolved in `m`.  The most direct implementation uses a failure continuation which is first set to look in the remaining stack and then reset to throw a `NotInScope` error:
+That `open M.N` should succeed but not `open M` followed by `open N`
+feels problematic.  One would naturally expect that `M` has a
+submodule `N` which one can bring into scope by opening `M`.
+
+The correct resolution of `q` should go through the stack, but commit
+to one stack element `m` as soon as the head of `q` can be resolved in
+`m`.  The most direct implementation uses a failure continuation which
+is first set to look in the remaining stack and then reset to throw a
+`NotInScope` error:
+
 ```haskell
     lookupModuleContent q = do
       Γ ← cxt
@@ -329,24 +370,31 @@ The correct resolution of `q` should go through the stack, but commit to one sta
       loop (m:ms) = lookFor q m (loop ms)
 
       lookFor (x:xs) m continuation = do
-        case { u | x↦(_,_,u) ∈ m } of
+        case { u | x ↦ (_,_,u) ∈ m } of
           ∅  → continuation
           {u} → if null xs then return u else do
                   m' ← getModule u
                   lookFor xs m' err  -- discards continuation!
           else → raise AmbiguousName
 ```
-The third argument of `lookFor` is the `continuation` that is only invoked should already the head `x` of `q` be unbound in `m`.  Initially, `continuation` is set to `loop ms` that will search through the remaining modules `ms`, but after successful location of `x` in `m`, the `continuation` is reset to throw a `NotInScope` error.
 
-(The skilled functional programmer will spot that `loop` is nothing but `foldr (lookFor q) err`.)
+The third argument of `lookFor` is the `continuation` that is only
+invoked should already the head `x` of `q` be unbound in `m`.
+Initially, `continuation` is set to `loop ms` that will search through
+the remaining modules `ms`, but after successful location of `x` in
+`m`, the `continuation` is reset to throw a `NotInScope` error.
+
+(The skilled functional programmer will spot that `loop` is nothing
+but `foldr (lookFor q) err`.)
+
 
 ## Related Work
 
-Ulf Norell [1] described in 2006 the design of module system for
-Agda and its informal semantics.  At that time, Agda 2 was in the prototyping
-phase.  In contrast, the present work is a reconstruction of scope
-checking given the current implementation in Agda 2.6.0 and some of
-the envisioned modifications, e.g.,
+Ulf Norell [1] has described the design of module system for Agda, and
+its informal semantics, in 2006.  At that time, Agda 2 was in the
+prototyping phase.  In contrast, the present work is a reconstruction
+of scope checking given the current implementation in Agda 2.6.0 and
+some of the envisioned modifications, e.g.,
 [issue 3801](https://github.com/agda/agda/issues/3801).
 
 There are two essential differences to Norell's conception [1]:
@@ -377,8 +425,9 @@ nicely integrate shadowing of parent definitions.
 
 # References
 
-[1] Ulf Norell, [A Module System for Agda](http://www.cse.chalmers.se/~ulfn/talks/modules-061220.pdf), slides for talk at CHIT-CHAT 2006, Nijmegen, NL,
-20 December 2006.
+[1] Ulf Norell,
+[A Module System for Agda](http://www.cse.chalmers.se/~ulfn/talks/modules-061220.pdf),
+slides for talk at CHIT-CHAT 2006, Nijmegen, NL, 20 December 2006.
 
 
 <!--
@@ -403,7 +452,7 @@ lookupModuleContent q = do
 where
   err = raise NoInScope
   lookFor (x:xs) m continuation = do
-    case { u | x↦(_,_,u) ∈ m } of
+    case { u | x ↦ (_,_,u) ∈ m } of
       ∅  → continuation
       {u} → if null xs then return u else do
               m ← getModule u
@@ -416,7 +465,7 @@ list recursor `foldr` is
 the second argument has type `ScopeM AName`
 
   * `modifyCurrentModule f` applies `f` to the module content on top of the stack.
-    keepOnlyPublic a m = { x↦('imp',a,u) | x↦(_,'public',u) ∈ m }
+    keepOnlyPublic a m = { x ↦ ('imp',a,u) | x ↦ (_,'public',u) ∈ m }
 
   * `current` returns the point of view _u_ ∈ `AName`.
 
