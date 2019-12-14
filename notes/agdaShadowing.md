@@ -387,6 +387,9 @@ the remaining modules `ms`, but after successful location of `x` in
 (The skilled functional programmer will spot that `loop` is nothing
 but `foldr (lookFor q) err`.)
 
+A [Haskell implementation](https://github.com/andreasabel/agda-scope/tree/master/pure)
+of the scope checker presented here is available on
+[github](https://github.com/andreasabel/agda-scope/tree/master/pure).
 
 ## Related Work
 
@@ -395,7 +398,7 @@ its informal semantics, in 2006.  At that time, Agda 2 was in the
 prototyping phase.  In contrast, the present work is a reconstruction
 of scope checking given the current implementation in Agda 2.6.0 and
 some of the envisioned modifications, e.g.,
-[issue 3801](https://github.com/agda/agda/issues/3801).
+issue [#3801](https://github.com/agda/agda/issues/3801).
 
 There are two essential differences to Norell's conception [1]:
 
@@ -417,7 +420,7 @@ compositional in our setting.  In present Agda
 2.6.0 (and, presumably,  Norell's setting),
 this is however not a problem, since shadowing definitions of
 parent modules, as proposed in
-[issue 3801](https://github.com/agda/agda/issues/3801),
+issue [#3801](https://github.com/agda/agda/issues/3801),
 is ruled out there.
 It is not clear yet whether the current semantics of modules can
 nicely integrate shadowing of parent definitions.

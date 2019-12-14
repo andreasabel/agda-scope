@@ -1,6 +1,9 @@
 ---
-title: Scoping in Agda -- Rules and Scope Checking
+title: Hierarchical Modules in Agda -- Scoping Rules
 author: Andreas Abel
-date: 22 August 2019
+date: 22 August 2019, revised 14 December 2019
 numbersections: true
+header-includes:
+  - \usepackage[dvipsnames]{xcolor}
+  - \hypersetup{colorlinks=true,urlcolor=MidnightBlue}
 ---
