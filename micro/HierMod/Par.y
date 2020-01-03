@@ -2,9 +2,8 @@
 {
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns -fno-warn-overlapping-patterns #-}
 module HierMod.Par where
-import HierMod.Abs
+import qualified HierMod.Abs
 import HierMod.Lex
-import HierMod.ErrM
 import qualified Data.Text
 }
 
@@ -13,7 +12,7 @@ import qualified Data.Text
 %name pDecls Decls
 %name pQName QName
 -- no lexer declaration
-%monad { Err } { thenM } { returnM }
+%monad { Either String } { (>>=) } { return }
 %tokentype {Token}
 %token
   '(' { PT _ (TS _ 1) }
@@ -30,38 +29,32 @@ import qualified Data.Text
 
 %%
 
-Name :: { Name}
-Name  : L_Name { Name ($1)}
+Name :: { HierMod.Abs.Name}
+Name  : L_Name { HierMod.Abs.Name $1 }
 
-Program :: { Program }
+Program :: { HierMod.Abs.Program }
 Program : 'module' Name 'where' '{' Decls '}' { HierMod.Abs.Prg $2 $5 }
-Decl :: { Decl }
+Decl :: { HierMod.Abs.Decl }
 Decl : 'module' Name 'where' '{' Decls '}' { HierMod.Abs.Modl $2 $5 }
      | 'open' QName 'using' '(' ')' { HierMod.Abs.Ref $2 }
-Decls :: { Decls }
+Decls :: { HierMod.Abs.Decls }
 Decls : {- empty -} { HierMod.Abs.DNil }
       | Decls ';' Decl { HierMod.Abs.DSnoc $1 $3 }
       | Decl { dSg_ $1 }
-QName :: { QName }
+QName :: { HierMod.Abs.QName }
 QName : Name { HierMod.Abs.QName $1 }
       | Name '.' QName { HierMod.Abs.Qual $1 $3 }
 {
 
-returnM :: a -> Err a
-returnM = return
-
-thenM :: Err a -> (a -> Err b) -> Err b
-thenM = (>>=)
-
-happyError :: [Token] -> Err a
-happyError ts =
-  Bad $ "syntax error at " ++ tokenPos ts ++
+happyError :: [Token] -> Either String a
+happyError ts = Left $
+  "syntax error at " ++ tokenPos ts ++
   case ts of
     []      -> []
     [Err _] -> " due to lexer error"
     t:_     -> " before `" ++ (prToken t) ++ "'"
 
 myLexer = tokens
-dSg_ d_ = DSnoc DNil d_
+dSg_ d_ = HierMod.Abs.DSnoc HierMod.Abs.DNil d_
 }
 

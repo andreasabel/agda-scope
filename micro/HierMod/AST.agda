@@ -12,47 +12,48 @@ open import Agda.Builtin.String using () renaming
   ; primStringFromList to #stringFromList
   )
 
+{-# FOREIGN GHC import Prelude (Bool, Char, Double, Integer, String, (.)) #-}
 {-# FOREIGN GHC import qualified Data.Text #-}
-{-# FOREIGN GHC import HierMod.Abs #-}
+{-# FOREIGN GHC import qualified HierMod.Abs #-}
 {-# FOREIGN GHC import HierMod.Print (printTree) #-}
 
 data Name : Set where
   name : #String → Name
 
-{-# COMPILE GHC Name = data Name (Name) #-}
+{-# COMPILE GHC Name = data HierMod.Abs.Name (HierMod.Abs.Name) #-}
 
 mutual
 
   data Program : Set where
     prg : (x : Name) (d : Decls) → Program
 
-  {-# COMPILE GHC Program = data Program (Prg) #-}
+  {-# COMPILE GHC Program = data HierMod.Abs.Program (HierMod.Abs.Prg) #-}
 
   data Decl : Set where
     modl : (x : Name) (d : Decls) → Decl
     ref : (q : QName) → Decl
 
-  {-# COMPILE GHC Decl = data Decl
-    ( Modl
-    | Ref
+  {-# COMPILE GHC Decl = data HierMod.Abs.Decl
+    ( HierMod.Abs.Modl
+    | HierMod.Abs.Ref
     ) #-}
 
   data Decls : Set where
     dNil : Decls
     dSnoc : (d₁ : Decls) (d₂ : Decl) → Decls
 
-  {-# COMPILE GHC Decls = data Decls
-    ( DNil
-    | DSnoc
+  {-# COMPILE GHC Decls = data HierMod.Abs.Decls
+    ( HierMod.Abs.DNil
+    | HierMod.Abs.DSnoc
     ) #-}
 
   data QName : Set where
     qName : (x : Name) → QName
     qual : (x : Name) (q : QName) → QName
 
-  {-# COMPILE GHC QName = data QName
-    ( QName
-    | Qual
+  {-# COMPILE GHC QName = data HierMod.Abs.QName
+    ( HierMod.Abs.QName
+    | HierMod.Abs.Qual
     ) #-}
 
 -- Binding the pretty printers.
@@ -63,7 +64,7 @@ postulate
   printDecls : Decls → #String
   printQName : QName → #String
 
-{-# COMPILE GHC printProgram = \ p -> Data.Text.pack (printTree (p :: Program)) #-}
-{-# COMPILE GHC printDecl = \ d -> Data.Text.pack (printTree (d :: Decl)) #-}
-{-# COMPILE GHC printDecls = \ d -> Data.Text.pack (printTree (d :: Decls)) #-}
-{-# COMPILE GHC printQName = \ q -> Data.Text.pack (printTree (q :: QName)) #-}
+{-# COMPILE GHC printProgram = \ p -> Data.Text.pack (printTree (p :: HierMod.Abs.Program)) #-}
+{-# COMPILE GHC printDecl = \ d -> Data.Text.pack (printTree (d :: HierMod.Abs.Decl)) #-}
+{-# COMPILE GHC printDecls = \ d -> Data.Text.pack (printTree (d :: HierMod.Abs.Decls)) #-}
+{-# COMPILE GHC printQName = \ q -> Data.Text.pack (printTree (q :: HierMod.Abs.QName)) #-}

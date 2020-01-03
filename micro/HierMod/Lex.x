@@ -23,13 +23,17 @@ $u = [. \n]          -- universal: any character
    \{ | \} | \( | \) | \; | \.
 
 :-
-"--" [.]* ; -- Toss single line comments
-"{-" ([$u # \-] | \-+ [$u # [\- \}]])* ("-")+ "}" ;
+
+-- Line comments
+"--" [.]* ;
+
+-- Block comments
+"{-" [$u # \-]* \- ([$u # [\- \}]] [$u # \-]* \- | \-)* \} ;
 
 $white+ ;
 @rsyms
     { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
-($u # [\- \( \) \{ \} \; \. \@ \" \  \n \r \t \f]) +
+[$u # [\t \n \f \r \  \" \( \) \- \. \; \@ \{ \}]] +
     { tok (\p s -> PT p (eitherResIdent (T_Name . share) s)) }
 
 $l $i*
@@ -108,10 +112,11 @@ eitherResIdent tv s = treeFind resWords
 resWords :: BTree
 resWords = b "open" 6 (b "." 3 (b ")" 2 (b "(" 1 N N) N) (b "module" 5 (b ";" 4 N N) N)) (b "{" 9 (b "where" 8 (b "using" 7 N N) N) (b "}" 10 N N))
    where b s n = let bs = Data.Text.pack s
-                  in B bs (TS bs n)
+                 in  B bs (TS bs n)
 
 unescapeInitTail :: Data.Text.Text -> Data.Text.Text
-unescapeInitTail = Data.Text.pack . unesc . tail . Data.Text.unpack where
+unescapeInitTail = Data.Text.pack . unesc . tail . Data.Text.unpack
+  where
   unesc s = case s of
     '\\':c:cs | elem c ['\"', '\\', '\''] -> c : unesc cs
     '\\':'n':cs  -> '\n' : unesc cs

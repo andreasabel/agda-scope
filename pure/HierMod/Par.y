@@ -2,9 +2,8 @@
 {
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns -fno-warn-overlapping-patterns #-}
 module HierMod.Par where
-import HierMod.Abs
+import qualified HierMod.Abs
 import HierMod.Lex
-import HierMod.ErrM
 }
 
 %name pProgram Program
@@ -12,7 +11,7 @@ import HierMod.ErrM
 %name pListDecl ListDecl
 %name pListName ListName
 -- no lexer declaration
-%monad { Err } { thenM } { returnM }
+%monad { Either String } { (>>=) } { return }
 %tokentype {Token}
 %token
   '.' { PT _ (TS _ 1) }
@@ -28,33 +27,27 @@ import HierMod.ErrM
 
 %%
 
-Name :: { Name}
-Name  : L_Name { Name ($1)}
+Name :: { HierMod.Abs.Name}
+Name  : L_Name { HierMod.Abs.Name $1 }
 
-Program :: { Program }
+Program :: { HierMod.Abs.Program }
 Program : 'module' Name 'where' '{' ListDecl '}' { HierMod.Abs.Prg $2 $5 }
-Decl :: { Decl }
+Decl :: { HierMod.Abs.Decl }
 Decl : 'module' Name 'where' '{' ListDecl '}' { HierMod.Abs.Modl $2 $5 }
      | 'private' 'module' Name 'where' '{' ListDecl '}' { HierMod.Abs.PrivateModl $3 $6 }
      | 'open' ListName { HierMod.Abs.Open $2 }
      | 'open' ListName 'public' { HierMod.Abs.OpenPublic $2 }
-ListDecl :: { [Decl] }
+ListDecl :: { [HierMod.Abs.Decl] }
 ListDecl : {- empty -} { [] }
          | Decl { (:[]) $1 }
          | Decl ';' ListDecl { (:) $1 $3 }
-ListName :: { [Name] }
+ListName :: { [HierMod.Abs.Name] }
 ListName : Name { (:[]) $1 } | Name '.' ListName { (:) $1 $3 }
 {
 
-returnM :: a -> Err a
-returnM = return
-
-thenM :: Err a -> (a -> Err b) -> Err b
-thenM = (>>=)
-
-happyError :: [Token] -> Err a
-happyError ts =
-  Bad $ "syntax error at " ++ tokenPos ts ++
+happyError :: [Token] -> Either String a
+happyError ts = Left $
+  "syntax error at " ++ tokenPos ts ++
   case ts of
     []      -> []
     [Err _] -> " due to lexer error"

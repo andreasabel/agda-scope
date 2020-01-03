@@ -22,13 +22,17 @@ $u = [. \n]          -- universal: any character
    \{ | \} | \; | \.
 
 :-
-"--" [.]* ; -- Toss single line comments
-"{-" ([$u # \-] | \-+ [$u # [\- \}]])* ("-")+ "}" ;
+
+-- Line comments
+"--" [.]* ;
+
+-- Block comments
+"{-" [$u # \-]* \- ([$u # [\- \}]] [$u # \-]* \- | \-)* \} ;
 
 $white+ ;
 @rsyms
     { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
-($u # [\- \( \) \{ \} \; \. \@ \" \  \n \r \t \f]) +
+[$u # [\t \n \f \r \  \" \( \) \- \. \; \@ \{ \}]] +
     { tok (\p s -> PT p (eitherResIdent (T_Name . share) s)) }
 
 $l $i*
@@ -84,12 +88,12 @@ mkPosToken t@(PT p _) = (posLineCol p, prToken t)
 
 prToken :: Token -> String
 prToken t = case t of
-  PT _ (TS s _) -> id s
+  PT _ (TS s _) -> s
   PT _ (TL s)   -> show s
-  PT _ (TI s)   -> id s
-  PT _ (TV s)   -> id s
-  PT _ (TD s)   -> id s
-  PT _ (TC s)   -> id s
+  PT _ (TI s)   -> s
+  PT _ (TV s)   -> s
+  PT _ (TD s)   -> s
+  PT _ (TC s)   -> s
   Err _         -> "#error"
   PT _ (T_Name s) -> s
 
@@ -106,11 +110,12 @@ eitherResIdent tv s = treeFind resWords
 
 resWords :: BTree
 resWords = b "private" 5 (b "module" 3 (b ";" 2 (b "." 1 N N) N) (b "open" 4 N N)) (b "{" 8 (b "where" 7 (b "public" 6 N N) N) (b "}" 9 N N))
-   where b s n = let bs = id s
-                  in B bs (TS bs n)
+   where b s n = let bs = s
+                 in  B bs (TS bs n)
 
 unescapeInitTail :: String -> String
-unescapeInitTail = id . unesc . tail . id where
+unescapeInitTail = id . unesc . tail . id
+  where
   unesc s = case s of
     '\\':c:cs | elem c ['\"', '\\', '\''] -> c : unesc cs
     '\\':'n':cs  -> '\n' : unesc cs
@@ -158,7 +163,7 @@ tokens str = go (alexStartPos, '\n', [], str)
 alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
 alexGetByte (p, c, (b:bs), s) = Just (b, (p, c, bs, s))
 alexGetByte (p, _, [], s) =
-  case  s of
+  case s of
     []  -> Nothing
     (c:s) ->
              let p'     = alexMove p c

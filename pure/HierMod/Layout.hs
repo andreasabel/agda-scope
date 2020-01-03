@@ -214,7 +214,7 @@ incrGlobal _ _ p = error $ "cannot add token at " ++ show p
 
 -- | Create a symbol token.
 sToken :: Position -> String -> Token
-sToken p s = PT p (TS (s) i)
+sToken p s = PT p (TS s i)
   where
     i = case s of
       "." -> 1

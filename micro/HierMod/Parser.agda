@@ -18,9 +18,9 @@ open import HierMod.AST using
   ; QName
   )
 
+{-# FOREIGN GHC import Prelude (Bool, Char, Double, Integer, String, (.)) #-}
 {-# FOREIGN GHC import qualified Data.Text #-}
-{-# FOREIGN GHC import HierMod.Abs #-}
-{-# FOREIGN GHC import HierMod.ErrM #-}
+{-# FOREIGN GHC import qualified HierMod.ErrM #-}
 {-# FOREIGN GHC import HierMod.Par #-}
 {-# FOREIGN GHC import qualified HierMod.Layout #-}
 
@@ -30,9 +30,9 @@ data Err A : Set where
   ok : A → Err A
   bad : #List Char → Err A
 
-{-# COMPILE GHC Err = data Err
-  ( Ok
-  | Bad
+{-# COMPILE GHC Err = data HierMod.ErrM.Err
+  ( HierMod.ErrM.Ok
+  | HierMod.ErrM.Bad
   ) #-}
 
 -- Happy parsers
