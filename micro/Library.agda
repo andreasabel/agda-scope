@@ -42,10 +42,11 @@ module String where
 
 -- Has A B similar to Dec (Σ A B)
 
-data Has {a} {b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
-  yes : {a : A} → B a → Has A B
-  no' : ¬ A → Has A B
-  no  : ({a : A} → ¬ B a) → Has A B
+module Has where
+  data Has {a} {b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
+    yes : {a : A} → B a → Has A B
+    no' : ¬ A → Has A B
+    no  : ({a : A} → ¬ B a) → Has A B
 
 -- Injective functions
 
