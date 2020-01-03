@@ -4,7 +4,7 @@ import System.Exit        (exitFailure)
 
 import HierMod.Abs        (Program)
 import HierMod.Par        (pProgram, myLexer)
-import HierMod.ErrM       (Err(Ok,Bad))
+import HierMod.ErrM
 import HierMod.Layout     (resolveLayout)
 
 import ScopeChecker       (checkProgram)
