@@ -1,6 +1,6 @@
 -- Restricted syntax as input for scope checker.
 
-open import Library renaming (_≟_ to _==_)
+open import Library renaming (_≟_ to _==_); open Dec
 -- open import Library using (List; Bool; Dec; yes!; no; _≡_)
 
 module Concrete where

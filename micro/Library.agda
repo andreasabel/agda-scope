@@ -27,15 +27,17 @@ open import Data.List.NonEmpty                    public using (List⁺; _∷_; 
 open import Function                              public using (id; _∘_; _∘′_; _$_; case_of_)
 open import Level                                 public using (_⊔_)
 
-open import Relation.Nullary                      public using (Dec; yes; no; ¬_)
+open import Relation.Nullary                      public using (Dec; ¬_) hiding (module Dec)
 open import Relation.Binary.PropositionalEquality public using (_≡_; refl; cong)
 
 open import IO.Primitive      public using (IO)
 
 -- Utilities
 
+module Dec = Relation.Nullary using (yes; no)
+
 pattern here! = here refl
-pattern yes!  = yes  refl
+pattern yes!  = Dec.yes refl
 
 module String where
   open import Data.String.Base public

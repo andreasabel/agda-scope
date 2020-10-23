@@ -1,6 +1,6 @@
 -- Abstract syntax, intrinsically well-scoped.
 
-open import Library
+open import Library; open Dec
 import Concrete as C
 
 module WellScoped where
