@@ -1,6 +1,15 @@
 # Agda Scoping [![Build Status](https://travis-ci.org/andreasabel/agda-scope.svg?branch=master)](https://travis-ci.org/andreasabel/agda-scope)
 Notes and prototypes concerning Agda's scope checker
 
+* `notes/agdaShadowing.md`: See below
+
+* `notes/modcal.tex`: WIP: formalization of well-scoped hierarchical modules
+
+* `core/`: Scope Checker for small Agda fragment in Agda (WIP)
+* `pure/`: Minimal calculus of hierarchical modules implemented in Haskell
+* `micro/`: Minimal calculus of hierarchical modules implemented in Agda
+* `src/`: Haskell to Agda data type translation (using Template Haskell)
+
 ## RFC Agda shadowing rules
 
 This [note](https://andreasabel.github.io/agda-scope/notes/agdaShadowing.pdf)
