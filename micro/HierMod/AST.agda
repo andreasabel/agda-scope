@@ -31,7 +31,7 @@ mutual
 
   data Decl : Set where
     modl : (x : Name) (d : Decls) → Decl
-    ref : (q : QName) → Decl
+    ref  : (q : QName) → Decl
 
   {-# COMPILE GHC Decl = data HierMod.Abs.Decl
     ( HierMod.Abs.Modl
@@ -39,7 +39,7 @@ mutual
     ) #-}
 
   data Decls : Set where
-    dNil : Decls
+    dNil  : Decls
     dSnoc : (d₁ : Decls) (d₂ : Decl) → Decls
 
   {-# COMPILE GHC Decls = data HierMod.Abs.Decls
@@ -49,22 +49,27 @@ mutual
 
   data QName : Set where
     qName : (x : Name) → QName
-    qual : (x : Name) (q : QName) → QName
+    qual  : (x : Name) (q : QName) → QName
 
   {-# COMPILE GHC QName = data HierMod.Abs.QName
     ( HierMod.Abs.QName
     | HierMod.Abs.Qual
     ) #-}
 
+dSg : Decl → Decls
+dSg = λ d → dSnoc dNil d
+
 -- Binding the pretty printers.
 
 postulate
   printProgram : Program → #String
-  printDecl : Decl → #String
-  printDecls : Decls → #String
-  printQName : QName → #String
+  printDecl    : Decl → #String
+  printDecls   : Decls → #String
+  printQName   : QName → #String
+  printName    : Name → #String
 
 {-# COMPILE GHC printProgram = \ p -> Data.Text.pack (printTree (p :: HierMod.Abs.Program)) #-}
 {-# COMPILE GHC printDecl = \ d -> Data.Text.pack (printTree (d :: HierMod.Abs.Decl)) #-}
 {-# COMPILE GHC printDecls = \ d -> Data.Text.pack (printTree (d :: HierMod.Abs.Decls)) #-}
 {-# COMPILE GHC printQName = \ q -> Data.Text.pack (printTree (q :: HierMod.Abs.QName)) #-}
+{-# COMPILE GHC printName = \ x -> Data.Text.pack (printTree (x :: HierMod.Abs.Name)) #-}

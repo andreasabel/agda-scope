@@ -27,7 +27,7 @@ open import HierMod.AST using
 -- Error monad of BNFC
 
 data Err A : Set where
-  ok : A → Err A
+  ok  : A → Err A
   bad : #List Char → Err A
 
 {-# COMPILE GHC Err = data HierMod.ErrM.Err

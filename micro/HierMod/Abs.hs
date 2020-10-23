@@ -26,3 +26,6 @@ data Decls = DNil | DSnoc Decls Decl
 data QName = QName Name | Qual Name QName
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
+dSg :: Decl -> Decls
+dSg d = DSnoc DNil d
+

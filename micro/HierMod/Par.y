@@ -34,13 +34,16 @@ Name  : L_Name { HierMod.Abs.Name $1 }
 
 Program :: { HierMod.Abs.Program }
 Program : 'module' Name 'where' '{' Decls '}' { HierMod.Abs.Prg $2 $5 }
+
 Decl :: { HierMod.Abs.Decl }
 Decl : 'module' Name 'where' '{' Decls '}' { HierMod.Abs.Modl $2 $5 }
      | 'open' QName 'using' '(' ')' { HierMod.Abs.Ref $2 }
+
 Decls :: { HierMod.Abs.Decls }
 Decls : {- empty -} { HierMod.Abs.DNil }
       | Decls ';' Decl { HierMod.Abs.DSnoc $1 $3 }
-      | Decl { dSg_ $1 }
+      | Decl { HierMod.Abs.dSg $1 }
+
 QName :: { HierMod.Abs.QName }
 QName : Name { HierMod.Abs.QName $1 }
       | Name '.' QName { HierMod.Abs.Qual $1 $3 }
@@ -55,6 +58,5 @@ happyError ts = Left $
     t:_     -> " before `" ++ (prToken t) ++ "'"
 
 myLexer = tokens
-dSg_ d_ = HierMod.Abs.DSnoc HierMod.Abs.DNil d_
 }
 

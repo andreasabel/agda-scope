@@ -14,7 +14,7 @@ import qualified GHC.Exts as Happy_GHC_Exts
 import Control.Applicative(Applicative(..))
 import Control.Monad (ap)
 
--- parser produced by Happy Version 1.19.12
+-- parser produced by Happy Version 1.20.0
 
 newtype HappyAbsSyn  = HappyAbsSyn HappyAny
 #if __GLASGOW_HASKELL__ >= 607
@@ -180,7 +180,7 @@ happyReduce_10 = happySpecReduce_1  3# happyReduction_10
 happyReduction_10 happy_x_1
 	 =  case happyOut9 happy_x_1 of { (HappyWrap9 happy_var_1) -> 
 	happyIn10
-		 (dSg_ happy_var_1
+		 (HierMod.Abs.dSg happy_var_1
 	)}
 
 happyReduce_11 = happySpecReduce_1  4# happyReduction_11
@@ -256,7 +256,6 @@ happyError ts = Left $
     t:_     -> " before `" ++ (prToken t) ++ "'"
 
 myLexer = tokens
-dSg_ d_ = HierMod.Abs.DSnoc HierMod.Abs.DNil d_
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- $Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp $
 

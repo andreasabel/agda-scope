@@ -28,7 +28,7 @@ $u = [. \n]          -- universal: any character
 "--" [.]* ;
 
 -- Block comments
-"{-" [$u # \-]* \- ([$u # [\- \}]] [$u # \-]* \- | \-)* \} ;
+\{ \- [$u # \-]* \- ([$u # [\- \}]] [$u # \-]* \- | \-)* \} ;
 
 $white+ ;
 @rsyms
@@ -84,20 +84,22 @@ tokenLineCol = posLineCol . tokenPosn
 posLineCol :: Posn -> (Int, Int)
 posLineCol (Pn _ l c) = (l,c)
 
-mkPosToken :: Token -> ((Int, Int), String)
-mkPosToken t@(PT p _) = (posLineCol p, prToken t)
+mkPosToken :: Token -> ((Int, Int), Data.Text.Text)
+mkPosToken t@(PT p _) = (posLineCol p, tokenText t)
+
+tokenText :: Token -> Data.Text.Text
+tokenText t = case t of
+  PT _ (TS s _) -> s
+  PT _ (TL s)   -> Data.Text.pack (show s)
+  PT _ (TI s)   -> s
+  PT _ (TV s)   -> s
+  PT _ (TD s)   -> s
+  PT _ (TC s)   -> s
+  Err _         -> Data.Text.pack "#error"
+  PT _ (T_Name s) -> s
 
 prToken :: Token -> String
-prToken t = case t of
-  PT _ (TS s _) -> Data.Text.unpack s
-  PT _ (TL s)   -> show s
-  PT _ (TI s)   -> Data.Text.unpack s
-  PT _ (TV s)   -> Data.Text.unpack s
-  PT _ (TD s)   -> Data.Text.unpack s
-  PT _ (TC s)   -> Data.Text.unpack s
-  Err _         -> "#error"
-  PT _ (T_Name s) -> Data.Text.unpack s
-
+prToken t = Data.Text.unpack (tokenText t)
 
 data BTree = N | B Data.Text.Text Tok BTree BTree deriving (Show)
 
