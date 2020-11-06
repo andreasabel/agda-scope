@@ -126,7 +126,7 @@ Private module definitions and imports are unaffected by this principle.
 
 ### Names cannot be defined twice in a module
 
-However, ambiguity should not be introduced in the absense of any
+However, ambiguity should not be introduced in the absence of any
 imports, even not for private identifiers.
 
 > Principle 2.
@@ -222,7 +222,7 @@ many of the examples presented so far.
 ### Remark: accessibility in relation to export lists
 
 In Agda, accessiblity information is attached to names _introduced_
-into module. This is similar to accessibility modifiers in classes in
+into a module. This is similar to accessibility modifiers in classes in
 Java-like languages or in ML signatures.  Other languages, like
 Haskell, use export lists instead.  Export lists have the advantage to
 gather all exports in one place, whereas in Agda without tool support,
