@@ -1,6 +1,7 @@
 *~
 *.agdai
 *.bak
+*.blg
 *.o
 *.hi
 *.dyn_hi
@@ -28,3 +29,6 @@ MAlonzo
 /pure/HierMod/Par.info
 /pure/HierMod/Skel.hs
 /pure/HierMod/Test
+/notes/medium.bib
+/ghc-bug/
+/docs/
