@@ -10,9 +10,12 @@ default :
 # - make contents
 # - copy contents to docs folder
 
-docs : deploy emptyDocsFolder
-	cp notes/*.pdf docs/notes/
-#	cp -r src-cbpv/html docs/html-cbpv
+docs : deploy emptyDocsFolder README.md Makefile
+	cp -p notes/*.pdf docs/notes/
+	pandoc -s -o docs/index.html README.md
+# -f gfm --metadata title="Agda Scoping"
+#	tree -H '.' docs -o docs/index.html
+
 
 
 # Make contents on travis

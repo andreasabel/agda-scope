@@ -48,11 +48,9 @@ files=
 
 .PRECIOUS : $(lagdaFilesConvertedToTex) $(lagdaFilesConvertedToTexAfterSed)
 
-default : agdaShadowing.pdf
-
 all : agdaShadowing.pdf modcal.pdf
 
-deploy : agdaShadowing.pdf
+deploy : agdaShadowing.pdf modcal.pdf
 
 ship : $(destdir)/modcal.pdf
 
@@ -95,7 +93,7 @@ clean : softclean
 
 # then, run bibtex
 modcal.bbl : modcal_aux auto-modcal.bib $(latexfiles)
-	bibtex modcal;
+	-bibtex modcal;
 	$(pdflatex) modcal.tex
 
 
@@ -105,7 +103,8 @@ modcal.bbl : modcal_aux auto-modcal.bib $(latexfiles)
 # return a "Nothing to do")
 modcal.pdf : modcal.bbl $(latexfiles)
 	$(pdflatex) modcal.tex
-	cp modcal.pdf modcalx.pdf
+	$(pdflatex) modcal.tex
+#	cp modcal.pdf modcalx.pdf
 
 
 # auto-modcal.bib is only defined if bibtool is present
@@ -116,7 +115,7 @@ ifneq ($(shell ls $(bibliography)),)
 auto-modcal.aux : modcal_aux $(bibliography)
 #	echo '\\bibstyle{jfp}' > $@
 #	echo '\\bibdata{medium}' > $@
-	grep -o '\\citation{.*}' modcal.aux > $@
+	-grep -o '\\citation{.*}' modcal.aux > $@
 
 auto-modcal.bib : auto-modcal.aux
 	echo "%%%% WARNING! AUTOMATICALLY CREATED BIBFILE" > $@;
@@ -137,7 +136,7 @@ endif
 PANDOC_OPTS=-s -V monofont='DejaVu Sans Mono'
 #  -V mainfont='DejaVu Sans Mono'
 
-%.tex : %.md Makefile %.yaml
+%.tex : %.md %.yaml Makefile
 	cat $*.yaml $< | pandoc $(PANDOC_OPTS) -o $@
 
 latex-before-sed/%.tex : %.lagda
