@@ -9,9 +9,9 @@ open import WellScoped as A
 
 data ScopeError : Set where
   notInScope' : ∀ (xs : C.QName) → ScopeError
-  notInScope  : ∀{xs : C.QName} {sc} (¬n : ¬ SName xs sc) → ScopeError
-  shadows     : ∀{xs sc} (n : SName xs sc) → ScopeError
-  ambiguous   : ∀{xs sc} (n₁ n₂ : SName xs sc) (ns : List (SName xs sc)) → ScopeError
+  notInScope  : (¬n : ¬ SName p xs sc) → ScopeError
+  shadows     : (n : SName p xs sc) → ScopeError
+  ambiguous   : (n₁ n₂ : SName p xs sc) (ns : List (SName p xs sc)) → ScopeError
 
 printScopeError : ScopeError → String
 printScopeError (notInScope' xs)                = "not in scope: " String.++ C.printQName xs
@@ -39,7 +39,7 @@ mutual
   -- ... | enum []            ¬n = fail (notInScope λ n → case ¬n n of λ())
   -- ... | enum (n₁ ∷ n₂ ∷ ns) _ = fail (ambiguous n₁ n₂ ns)
   -- ALT: current site may shadow parents
-  checkDecl (C.ref xs) sc with slookup xs sc
+  checkDecl (C.ref xs) sc with slookup priv xs sc
   ... | (n ∷ [])       = return (ref n)
   ... | []             = fail (notInScope' xs)
   ... | (n₁ ∷ n₂ ∷ ns) = fail (ambiguous n₁ n₂ ns)
@@ -49,11 +49,13 @@ mutual
   -- ... | yes n = fail (shadows n)
   -- ... | no  _ = do
   -- ALT shadowing rules: x must not be in scope in current site
-  checkDecl (C.modl x ds) sc with slookup (C.qName x) sc
+  checkDecl (C.modl x ds) sc with slookup priv (C.qName x) sc
   ... | (site n ∷ _) = fail (shadows (site {sc = sc} n))
   ... | _ = do
     ds' ← checkDecls ds sc
     return (modl x ds')
+
+  checkDecl (C.priv ds) sc = A.priv <$> checkDecls ds sc
 
   checkDecls : (ds : C.Decls) (sc : Scope) → M (A.Decls sc ds)
   checkDecls C.dNil         sc = return dNil

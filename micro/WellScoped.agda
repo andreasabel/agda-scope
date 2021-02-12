@@ -5,74 +5,101 @@ import Concrete as C
 
 module WellScoped where
 
+-- Access modifiers (private/public).
+
+data Access : Set where
+  publ : Access  -- Public access (from everywhere).  Exported.
+  priv : Access  -- Private access only from within the module and its parents. Not Exported.
+
+variable
+  p : Access
+
+data FlowTo : Access → Access → Set where
+  publFlow : FlowTo publ p      -- Public can flow everywhere.
+  privFlow : FlowTo priv priv   -- Private can only flow to private.
+
 -- A scope is a zipper.
 
 Scope = List C.Decls  -- snoc list
+
+variable
+  s  : C.Decl
+  ss : C.Decls
+  sc : Scope
+  x  : C.Name
+  xs : C.QName
 
 -- A "de Bruijn index": path of a name to its declaration.
 
 mutual
 
-  -- "Name xs s" means "xs declared in s"
-  data Name : (xs : C.QName) (s : C.Decl) → Set where
-    modl   : ∀ x {ss}                      → Name (C.qName x)   (C.modl x ss)
-    inside : ∀ x {xs ss} (n : LName xs ss) → Name (C.qual x xs) (C.modl x ss)
+  -- "Name p xs s" means "qualified name xs declared p (or more accessible) in declaration s"
+  data Name : (p : Access) (xs : C.QName) (s : C.Decl) → Set where
+    modl   : ∀ x                        → Name p (C.qName x)   (C.modl x ss)
+    inside : ∀ x (n : LName publ xs ss) → Name p (C.qual x xs) (C.modl x ss)
+    inpriv :     (n : LName priv xs ss) → Name priv xs (C.priv ss)
 
-  -- "xs declared in rs"
-  data LName (xs : C.QName) : (ss : C.Decls) → Set where
-    here  : ∀{ss s} (n : Name xs s)   → LName xs (C.dSnoc ss s)
-    there : ∀{ss s} (n : LName xs ss) → LName xs (C.dSnoc ss s)
+  -- "name xs declared p in one of the declarations ss"
+  data LName (p : Access) (xs : C.QName) : (ss : C.Decls) → Set where
+    here  : ∀{ss s} (n : Name  p xs s)  → LName p xs (C.dSnoc ss s)
+    there : ∀{ss s} (n : LName p xs ss) → LName p xs (C.dSnoc ss s)
 
--- "xs declared in sc"
-data SName (xs : C.QName) : (sc : Scope) → Set where
-  site   : ∀{sc ss} → LName xs ss → SName xs (ss ∷ sc)
-  parent : ∀{sc ss} → SName xs sc → SName xs (ss ∷ sc)
+-- "name xs declared in scope sc"
+data SName (p : Access) (xs : C.QName) : (sc : Scope) → Set where
+  site   : ∀{sc ss} → LName p xs ss → SName p xs (ss ∷ sc)
+  parent : ∀{sc ss} → SName p xs sc → SName p xs (ss ∷ sc)
 
-surj-inside : ∀ {x xs ss} → Surjective {A = LName xs ss} (inside x)
+surj-inside : Surjective {A = LName publ xs ss} (inside {p = p} x)
 surj-inside (inside x n) = n , refl
 
-lname-surjective : ∀{xs ss s}
-  → Surjective {B = LName xs (C.dSnoc ss s)} [ here , there ]′
+surj-inpriv : Surjective {A = LName priv xs ss} inpriv
+surj-inpriv (inpriv n) = n , refl
+
+lname-surjective : Surjective {B = LName p xs (C.dSnoc ss s)} [ here , there ]′
 lname-surjective (here  n) = inj₁ n , refl
 lname-surjective (there n) = inj₂ n , refl
 
-sname-surjective : ∀{xs ss sc}
-  → Surjective {B = SName xs (ss ∷ sc)} [ site , parent ]′
+sname-surjective : Surjective {B = SName p xs (ss ∷ sc)} [ site , parent ]′
 sname-surjective (site   n) = inj₁ n , refl
 sname-surjective (parent n) = inj₂ n , refl
 
 -- Decide whether xs is declared in s/ss/sc.
 
 mutual
-  name?  : ∀ xs s → Dec (Name xs s)
+  name?  : ∀ p xs s → Dec (Name p xs s)
   -- C.ref does not declare a name.
-  name? xs (C.ref q) = no λ()
+  name? p xs (C.ref q) = no λ()
+  -- Step inside private blocks.
+  name? publ xs (C.priv ss) = no λ()
+  name? priv xs (C.priv ss) with lname? priv xs ss
+  ... | yes n = yes (inpriv n)
+  ... | no ¬n = no λ{ (inpriv n) → ¬n n }
   -- Resolve qualification.
-  name? (C.qual x xs) (C.modl y ss) with x C.≟ y | lname? xs ss
-  name? (C.qual x xs) (C.modl x ss) | yes!  | yes n = yes (inside x n)
-  name? (C.qual x xs) (C.modl x ss) | yes!  | no ¬n = no λ{ (inside x n) → ¬n n}
-  name? (C.qual x xs) (C.modl y ss) | no ¬p | _     = no λ{ (inside x n) → ¬p refl}
+  name? p (C.qual x xs) (C.modl y ss) with x C.≟ y | lname? publ xs ss
+  name? p (C.qual x xs) (C.modl x ss) | yes!  | yes n = yes (inside x n)
+  name? p (C.qual x xs) (C.modl x ss) | yes!  | no ¬n = no λ{ (inside x n) → ¬n n}
+  name? p (C.qual x xs) (C.modl y ss) | no ¬p | _     = no λ{ (inside x n) → ¬p refl}
   -- Resolve CName.
-  name? (C.qName x) (C.modl y ss) with x C.≟ y
-  name? (C.qName x) (C.modl x ss) | yes!  = yes (Name.modl x)
-  name? (C.qName x) (C.modl y ss) | no ¬p = no λ{ (modl x) → ¬p refl }
+  name? p (C.qName x) (C.modl y ss) with x C.≟ y
+  name? p (C.qName x) (C.modl x ss) | yes!  = yes (Name.modl x)
+  name? p (C.qName x) (C.modl y ss) | no ¬p = no λ{ (modl x) → ¬p refl }
 
-  lname? : ∀ xs ss → Dec (LName xs ss)
+  lname? : ∀ p xs ss → Dec (LName p xs ss)
   -- List exhausted
-  lname? xs C.dNil         = no λ()
+  lname? p xs C.dNil         = no λ()
   -- In head?, in tail?
-  lname? xs (C.dSnoc ss s) with name? xs s | lname? xs ss
-  lname? xs (C.dSnoc ss s) | yes n | _     = yes (here n)  -- Bias: later decls overwrite earlier ones.
-  lname? xs (C.dSnoc ss s) | no _  | yes m = yes (there m)
-  lname? xs (C.dSnoc ss s) | no ¬n | no ¬m = no λ where
+  lname? p xs (C.dSnoc ss s) with name? p xs s | lname? p xs ss
+  lname? p xs (C.dSnoc ss s) | yes n | _     = yes (here n)  -- Bias: later decls overwrite earlier ones.
+  lname? p xs (C.dSnoc ss s) | no _  | yes m = yes (there m)
+  lname? p xs (C.dSnoc ss s) | no ¬n | no ¬m = no λ where
     (here n) → ¬n n
     (there m) → ¬m m
 
-sname? : ∀ xs sc → Dec (SName xs sc)
+sname? : ∀ p xs sc → Dec (SName p xs sc)
 -- List exhausted
-sname? xs []        = no λ()
+sname? p xs []        = no λ()
 -- In head?, in tail?
-sname? xs (ss ∷ sc) with lname? xs ss | sname? xs sc
+sname? p xs (ss ∷ sc) with lname? p xs ss | sname? p xs sc
 ... | yes n | _     = yes (site n)   -- Bias: Inner scopes take precedence!
 ... | no ¬n | yes m = yes (parent m)
 ... | no ¬n | no ¬m = no λ where
@@ -82,61 +109,67 @@ sname? xs (ss ∷ sc) with lname? xs ss | sname? xs sc
 -- Looking up all possible resolutions of a name (not respecting shadowing).
 
 mutual
-  lookupAll : ∀ xs s → Enumeration (Name xs s)
+  lookupAll : ∀ p xs s → Enumeration (Name p xs s)
   -- C.ref does not declare a name.
-  lookupAll xs (C.ref q)    = emptyEnum λ()
+  lookupAll p xs (C.ref q)    = emptyEnum λ()
+  -- Step inside private blocks.
+  lookupAll publ xs (C.priv ss) = emptyEnum λ()
+  lookupAll priv xs (C.priv ss) = mapEnum inpriv surj-inpriv (llookupAll priv xs ss)
   -- Resolve qualification.
-  lookupAll (C.qual x xs) (C.modl y ss) with x C.≟ y | llookupAll xs ss
-  lookupAll (C.qual x xs) (C.modl x ss) | yes!  | e = mapEnum (inside x) surj-inside e
-  lookupAll (C.qual x xs) (C.modl y ss) | no ¬p | _ = emptyEnum λ{ (inside x n) → ¬p refl }
+  lookupAll p (C.qual x xs) (C.modl y ss) with x C.≟ y | llookupAll publ xs ss
+  lookupAll p (C.qual x xs) (C.modl x ss) | yes!  | e = mapEnum (inside x) surj-inside e
+  lookupAll p (C.qual x xs) (C.modl y ss) | no ¬p | _ = emptyEnum λ{ (inside x n) → ¬p refl }
   -- Resolve CName.
-  lookupAll (C.qName x) (C.modl y ss) with x C.≟ y
-  lookupAll (C.qName x) (C.modl x ss) | yes!  = enum (modl x ∷ []) λ{ (modl x) → here! }
-  lookupAll (C.qName x) (C.modl y ss) | no ¬p = emptyEnum λ{ (modl x) → ¬p refl }
+  lookupAll p (C.qName x) (C.modl y ss) with x C.≟ y
+  lookupAll p (C.qName x) (C.modl x ss) | yes!  = enum (modl x ∷ []) λ{ (modl x) → here! }
+  lookupAll p (C.qName x) (C.modl y ss) | no ¬p = emptyEnum λ{ (modl x) → ¬p refl }
 
-  llookupAll : ∀ xs ss → Enumeration (LName xs ss)
+  llookupAll : ∀ p xs ss → Enumeration (LName p xs ss)
   -- List exhausted
-  llookupAll xs C.dNil = emptyEnum λ()
+  llookupAll p xs C.dNil = emptyEnum λ()
   -- In head?, in tail?
-  llookupAll xs (C.dSnoc ss s) with lookupAll xs s | llookupAll xs ss
-  llookupAll xs (C.dSnoc ss s) | e | e' = appendEnum here there lname-surjective e e'
+  llookupAll p xs (C.dSnoc ss s) with lookupAll p xs s | llookupAll p xs ss
+  llookupAll p xs (C.dSnoc ss s) | e | e' = appendEnum here there lname-surjective e e'
 
-slookupAll : ∀ xs ss → Enumeration (SName xs ss)
+slookupAll : ∀ p xs ss → Enumeration (SName p xs ss)
 -- List exhausted
-slookupAll xs [] = emptyEnum λ()
+slookupAll p xs [] = emptyEnum λ()
 -- In head?, in tail?
-slookupAll xs (ss ∷ sc) with llookupAll xs ss | slookupAll xs sc
-slookupAll xs (ss ∷ sc) | e | e' = appendEnum site parent sname-surjective e e'
+slookupAll p xs (ss ∷ sc) with llookupAll p xs ss | slookupAll p xs sc
+slookupAll p xs (ss ∷ sc) | e | e' = appendEnum site parent sname-surjective e e'
 
 -- Looking up possible resolutions of a name, discarding shadowed names of parents.
 
 mutual
-  lookup : ∀ xs s → List (Name xs s)
+  lookup : ∀ p xs s → List (Name p xs s)
   -- C.ref does not declare a name.
-  lookup xs (C.ref q)    = []
+  lookup p xs (C.ref q)    = []
+  -- Step inside private blocks.
+  lookup publ xs (C.priv ss) = []
+  lookup priv xs (C.priv ss) = map inpriv (llookup priv xs ss)
   -- Resolve qualification.
-  lookup (C.qual x xs) (C.modl y ss) with x C.≟ y | llookup xs ss
-  lookup (C.qual x xs) (C.modl x ss) | yes!  | ns = map (inside x) ns
-  lookup (C.qual x xs) (C.modl y ss) | no ¬p | _  = []
+  lookup p (C.qual x xs) (C.modl y ss) with x C.≟ y | llookup publ xs ss
+  lookup p (C.qual x xs) (C.modl x ss) | yes!  | ns = map (inside x) ns
+  lookup p (C.qual x xs) (C.modl y ss) | no ¬p | _  = []
   -- Resolve CName.
-  lookup (C.qName x) (C.modl y ss) with x C.≟ y
-  lookup (C.qName x) (C.modl x ss) | yes!  = modl x ∷ []
-  lookup (C.qName x) (C.modl y ss) | no ¬p = []
+  lookup p (C.qName x) (C.modl y ss) with x C.≟ y
+  lookup p (C.qName x) (C.modl x ss) | yes!  = modl x ∷ []
+  lookup p (C.qName x) (C.modl y ss) | no ¬p = []
 
-  llookup : ∀ xs ss → List (LName xs ss)
+  llookup : ∀ p xs ss → List (LName p xs ss)
   -- List exhausted
-  llookup xs C.dNil = []
+  llookup p xs C.dNil = []
   -- In head?, in tail?
-  llookup xs (C.dSnoc ss s) with lookup xs s | llookup xs ss
-  llookup xs (C.dSnoc ss s) | ns | ns' = map here ns ++ map there ns'  -- no shadowing of siblings!
+  llookup p xs (C.dSnoc ss s) with lookup p xs s | llookup p xs ss
+  llookup p xs (C.dSnoc ss s) | ns | ns' = map here ns ++ map there ns'  -- no shadowing of siblings!
 
-slookup : ∀ xs ss → List (SName xs ss)
+slookup : ∀ p xs ss → List (SName p xs ss)
 -- List exhausted
-slookup xs [] = []
+slookup p xs [] = []
 -- In head?, in tail?
-slookup xs (ss ∷ sc) with llookup xs ss | slookup xs sc
-slookup xs (ss ∷ sc) | [] | ns = map parent ns  -- only keep when current site does not resolve the name
-slookup xs (ss ∷ sc) | ns | _  = map site   ns  -- discard parent occurrences if current site has one
+slookup p xs (ss ∷ sc) with llookup p xs ss | slookup p xs sc
+slookup p xs (ss ∷ sc) | [] | ns = map parent ns  -- only keep when current site does not resolve the name
+slookup p xs (ss ∷ sc) | ns | _  = map site   ns  -- discard parent occurrences if current site has one
 
 
 -- Well-scoped declarations
@@ -144,8 +177,9 @@ slookup xs (ss ∷ sc) | ns | _  = map site   ns  -- discard parent occurrences 
 mutual
 
   data Decl (sc : Scope) : C.Decl → Set where
-    modl : ∀ x {ss} (ds : Decls sc ss) → Decl sc (C.modl x ss)
-    ref  : ∀ {xs}   (n  : SName xs sc) → Decl sc (C.ref xs)
+    modl : ∀ x  (ds : Decls sc ss) → Decl sc (C.modl x ss)
+    ref  : (n  : SName priv xs sc) → Decl sc (C.ref xs)
+    priv : (ds : Decls sc ss)      → Decl sc (C.priv ss)
 
   data Decls (sc : Scope) : (ss : C.Decls) → Set where
     dNil  : Decls sc C.dNil

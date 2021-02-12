@@ -24,6 +24,9 @@ test : micmod
 	./micmod test/Example.agda
 	! ./micmod test/NotInScope.agda
 	! ./micmod test/ScopeErr.agda
+	./micmod test/PrivateInSelf.agda
+	./micmod test/PrivateInParent.agda
+	! ./micmod test/PrivateInSibling.agda
 	! ./micmod test/Shadowed.agda
 
 # Just the parser

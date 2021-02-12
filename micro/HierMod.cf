@@ -1,23 +1,26 @@
 -- A labelled BNFC grammar (to be processed with BNFC)
 -- describing hierarchical modules in Agda syntax.
+--
 -- Andreas, 2019-05-04, -13
+-- Andreas, 2021-02-12 adding 'private' blocks
 
 -- A program is a top-level module containing a list of declarations.
 
-Prg.   Program ::= "module" Name "where" "{" Decls "}" ;
+Prg.     Program ::= "module" Name "where" "{" Decls "}" ;
 
-layout "where"  ;
+layout   "where", "private"  ;
 
 -- Declarations are modules or references to modules.
 
-Modl.  Decl ::= "module" Name "where" "{" Decls "}"    ; -- A new module with content.
-Ref.   Decl ::= "open" QName "using" "(" ")"           ; -- A reference to a module.
+Modl.    Decl ::= "module" Name "where" "{" Decls "}"  ; -- A new module with content.
+Ref.     Decl ::= "open" QName "using" "(" ")"         ; -- A reference to a module.
+Priv.    Decl ::= "private" "{" Decls "}"              ; -- A declaring thing in block as private.
 
-DNil.  Decls ::=                ;
-DSnoc. Decls ::= Decls ";" Decl ;
-dSg.   Decls ::= Decl           ;
+DNil.    Decls ::=                ;
+DSnoc.   Decls ::= Decls ";" Decl ;
+dSg.     Decls ::= Decl           ;
 
-define dSg d = DSnoc DNil d     ;
+define   dSg d = DSnoc DNil d     ;
 
 -- Qualified identifiers: non-empty lists of identifiers.
 -- Should not allow spaces around the ".", but this is not easily expressed in BNFC.
@@ -28,14 +31,14 @@ Qual.    QName ::= Name "." QName ;  -- Qualification.
 -- Identifiers.
 
 -- token Name (char - [ "-(){};.@\" \n\t" ]) + ;  -- The released BNFC does not understand \n and \t
-token Name (char - [ "-(){};.@\" \n\r\t\f" ]) + ;
+token    Name (char - [ "-(){};.@\" \n\r\t\f" ]) + ;
   -- Both too liberal and too restrictive:
   -- Only excluding Agdas reserved symbols (too liberal).
   -- Excluding "-" for the sake of comments (too restrictive).
 
 -- Comments.
 
-comment "--"      ;  -- line comment
-comment "{-" "-}" ;  --  non-nested block comment
+comment  "--"      ;  -- line comment
+comment  "{-" "-}" ;  --  non-nested block comment
 
 -- EOF
