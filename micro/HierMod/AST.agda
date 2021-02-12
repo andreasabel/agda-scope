@@ -32,10 +32,12 @@ mutual
   data Decl : Set where
     modl : (x : Name) (d : Decls) → Decl
     ref  : (q : QName) → Decl
+    priv : (d : Decls) → Decl
 
   {-# COMPILE GHC Decl = data HierMod.Abs.Decl
     ( HierMod.Abs.Modl
     | HierMod.Abs.Ref
+    | HierMod.Abs.Priv
     ) #-}
 
   data Decls : Set where

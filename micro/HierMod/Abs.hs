@@ -17,7 +17,7 @@ newtype Name = Name Data.Text.Text
 data Program = Prg Name Decls
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-data Decl = Modl Name Decls | Ref QName
+data Decl = Modl Name Decls | Ref QName | Priv Decls
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Decls = DNil | DSnoc Decls Decl

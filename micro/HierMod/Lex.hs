@@ -155,7 +155,7 @@ eitherResIdent tv s = treeFind resWords
                               | s == a = t
 
 resWords :: BTree
-resWords = b "open" 6 (b "." 3 (b ")" 2 (b "(" 1 N N) N) (b "module" 5 (b ";" 4 N N) N)) (b "{" 9 (b "where" 8 (b "using" 7 N N) N) (b "}" 10 N N))
+resWords = b "open" 6 (b "." 3 (b ")" 2 (b "(" 1 N N) N) (b "module" 5 (b ";" 4 N N) N)) (b "where" 9 (b "using" 8 (b "private" 7 N N) N) (b "}" 11 (b "{" 10 N N) N))
    where b s n = let bs = Data.Text.pack s
                  in  B bs (TS bs n)
 

@@ -14,7 +14,7 @@ topLayout :: Bool
 topLayout = False
 
 layoutWords, layoutStopWords :: [String]
-layoutWords     = ["where"]
+layoutWords     = ["where","private"]
 layoutStopWords = []
 
 -- layout separators
@@ -222,10 +222,11 @@ sToken p s = PT p (TS (Data.Text.pack s) i)
       ";" -> 4
       "module" -> 5
       "open" -> 6
-      "using" -> 7
-      "where" -> 8
-      "{" -> 9
-      "}" -> 10
+      "private" -> 7
+      "using" -> 8
+      "where" -> 9
+      "{" -> 10
+      "}" -> 11
       _ -> error $ "not a reserved word: " ++ show s
 
 -- | Get the position of a token.

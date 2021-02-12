@@ -28,10 +28,11 @@ import qualified Data.Text
   ';' { PT _ (TS _ 4) }
   'module' { PT _ (TS _ 5) }
   'open' { PT _ (TS _ 6) }
-  'using' { PT _ (TS _ 7) }
-  'where' { PT _ (TS _ 8) }
-  '{' { PT _ (TS _ 9) }
-  '}' { PT _ (TS _ 10) }
+  'private' { PT _ (TS _ 7) }
+  'using' { PT _ (TS _ 8) }
+  'where' { PT _ (TS _ 9) }
+  '{' { PT _ (TS _ 10) }
+  '}' { PT _ (TS _ 11) }
   L_Name { PT _ (T_Name $$) }
 
 %%
@@ -45,6 +46,7 @@ Program : 'module' Name 'where' '{' Decls '}' { HierMod.Abs.Prg $2 $5 }
 Decl :: { HierMod.Abs.Decl }
 Decl : 'module' Name 'where' '{' Decls '}' { HierMod.Abs.Modl $2 $5 }
      | 'open' QName 'using' '(' ')' { HierMod.Abs.Ref $2 }
+     | 'private' '{' Decls '}' { HierMod.Abs.Priv $3 }
 
 Decls :: { HierMod.Abs.Decls }
 Decls : {- empty -} { HierMod.Abs.DNil }
