@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="agda-scoping-build-status">Agda Scoping <a href="https://travis-ci.org/andreasabel/agda-scope"><img src="https://travis-ci.org/andreasabel/agda-scope.svg?branch=master" alt="Build Status" /></a></h1>
+<p>Notes and prototypes concerning Agda's scope checker. Content:</p>
+<ul>
+<li><p><a href="https://github.com/andreasabel/agda-scope/blob/master/notes/agdaShadowing.md"><code>notes/agdaShadowing.md</code></a>: See below (<a href="https://andreasabel.github.io/agda-scope/notes/agdaShadowing.pdf">PDF</a>)</p></li>
+<li><p><a href="https://github.com/andreasabel/agda-scope/blob/master/notes/modcal.tex"><code>notes/modcal.tex</code></a>: WIP: formalization of well-scoped hierarchical modules (<a href="https://andreasabel.github.io/agda-scope/notes/modcal.pdf">PDF</a>)</p></li>
+<li><p><a href="https://github.com/andreasabel/agda-scope/blob/master/core/"><code>core/</code></a>: Scope Checker for small Agda fragment in Agda (WIP)</p></li>
+<li><p><a href="https://github.com/andreasabel/agda-scope/blob/master/pure/"><code>pure/</code></a>: Minimal calculus of hierarchical modules implemented in Haskell</p></li>
+<li><p><a href="https://github.com/andreasabel/agda-scope/blob/master/micro/"><code>micro/</code></a>: Minimal calculus of hierarchical modules implemented in Agda</p></li>
+<li><p><a href="https://github.com/andreasabel/agda-scope/blob/master/src/"><code>src/</code></a>: Haskell to Agda data type translation (using Template Haskell)</p></li>
+</ul>
+<h2 id="rfc-agda-shadowing-rules">RFC Agda shadowing rules</h2>
+<p>This <a href="https://andreasabel.github.io/agda-scope/notes/agdaShadowing.pdf">note</a> proposes a changed semantics of the Agda module system allowing shadowing of definitions in parent modules (see <a href="https://github.com/agda/agda/issues/3801">Agda issue #3801</a>).</p>
+<p>Feel free to discuss my proposal on the <a href="https://github.com/andreasabel/agda-scope/issues">issue tracker</a>.</p>
+</body>
+</html>
