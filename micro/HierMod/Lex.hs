@@ -94,9 +94,6 @@ alex_actions = array (0 :: Int, 3)
 tok :: (Posn -> Data.Text.Text -> Token) -> (Posn -> Data.Text.Text -> Token)
 tok f p s = f p s
 
-share :: Data.Text.Text -> Data.Text.Text
-share = id
-
 data Tok =
    TS !Data.Text.Text !Int    -- reserved words and symbols
  | TL !Data.Text.Text         -- string literals
@@ -242,9 +239,9 @@ utf8Encode = map fromIntegral . go . ord
                         , 0x80 + ((oc `Data.Bits.shiftR` 6) Data.Bits..&. 0x3f)
                         , 0x80 + oc Data.Bits..&. 0x3f
                         ]
-alex_action_3 = tok (\p s -> PT p (eitherResIdent (TV . share) s))
-alex_action_4 = tok (\p s -> PT p (eitherResIdent (T_Name . share) s))
-alex_action_5 = tok (\p s -> PT p (eitherResIdent (TV . share) s))
+alex_action_3 = tok (\p s -> PT p (eitherResIdent TV s))
+alex_action_4 = tok (\p s -> PT p (eitherResIdent T_Name s))
+alex_action_5 = tok (\p s -> PT p (eitherResIdent TV s))
 
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- -----------------------------------------------------------------------------

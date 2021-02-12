@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-missing-signatures #-}
 {-# LANGUAGE CPP,MagicHash #-}
 {-# LINE 3 "HierMod/Lex.x" #-}
-
 {-# OPTIONS -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -w #-}
 module HierMod.Lex where
@@ -9,7 +8,6 @@ module HierMod.Lex where
 import qualified Data.Bits
 import Data.Word (Word8)
 import Data.Char (ord)
-
 #if __GLASGOW_HASKELL__ >= 603
 #include "ghcconfig.h"
 #elif defined(__GLASGOW_HASKELL__)
@@ -92,13 +90,8 @@ alex_actions = array (0 :: Int, 3)
   ]
 
 {-# LINE 45 "HierMod/Lex.x" #-}
-
-
 tok :: (Posn -> String -> Token) -> (Posn -> String -> Token)
 tok f p s = f p s
-
-share :: String -> String
-share = id
 
 data Tok =
    TS !String !Int    -- reserved words and symbols
@@ -134,10 +127,10 @@ posLineCol :: Posn -> (Int, Int)
 posLineCol (Pn _ l c) = (l,c)
 
 mkPosToken :: Token -> ((Int, Int), String)
-mkPosToken t@(PT p _) = (posLineCol p, prToken t)
+mkPosToken t@(PT p _) = (posLineCol p, tokenText t)
 
-prToken :: Token -> String
-prToken t = case t of
+tokenText :: Token -> String
+tokenText t = case t of
   PT _ (TS s _) -> s
   PT _ (TL s)   -> show s
   PT _ (TI s)   -> s
@@ -147,6 +140,8 @@ prToken t = case t of
   Err _         -> "#error"
   PT _ (T_Name s) -> s
 
+prToken :: Token -> String
+prToken t = tokenText t
 
 data BTree = N | B String Tok BTree BTree deriving (Show)
 
@@ -243,10 +238,10 @@ utf8Encode = map fromIntegral . go . ord
                         , 0x80 + ((oc `Data.Bits.shiftR` 6) Data.Bits..&. 0x3f)
                         , 0x80 + oc Data.Bits..&. 0x3f
                         ]
+alex_action_3 = tok (\p s -> PT p (eitherResIdent TV s))
+alex_action_4 = tok (\p s -> PT p (eitherResIdent T_Name s))
+alex_action_5 = tok (\p s -> PT p (eitherResIdent TV s))
 
-alex_action_3 =  tok (\p s -> PT p (eitherResIdent (TV . share) s)) 
-alex_action_4 =  tok (\p s -> PT p (eitherResIdent (T_Name . share) s)) 
-alex_action_5 =  tok (\p s -> PT p (eitherResIdent (TV . share) s)) 
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- -----------------------------------------------------------------------------
 -- ALEX TEMPLATE
@@ -425,9 +420,15 @@ alex_scan_tkn user__ orig_input len input__ s last_acc =
             -1# -> (new_acc, input__)
                 -- on an error, we want to keep the input *before* the
                 -- character that failed, not after.
-            _ -> alex_scan_tkn user__ orig_input (if c < 0x80 || c >= 0xC0 then (len +# 1#) else len)
-                                                -- note that the length is increased ONLY if this is the 1st byte in a char encoding)
-                        new_input new_s new_acc
+            _ -> alex_scan_tkn user__ orig_input
+
+
+
+
+                   (if c < 0x80 || c >= 0xC0 then (len +# 1#) else len)
+                   -- note that the length is increased ONLY if this is the 1st byte in a char encoding)
+
+                   new_input new_s new_acc
       }
   where
         check_accs (AlexAccNone) = last_acc

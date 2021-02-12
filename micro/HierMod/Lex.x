@@ -32,12 +32,12 @@ $u = [. \n]          -- universal: any character
 
 $white+ ;
 @rsyms
-    { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
+    { tok (\p s -> PT p (eitherResIdent TV s)) }
 [$u # [\t \n \f \r \  \" \( \) \- \. \; \@ \{ \}]] +
-    { tok (\p s -> PT p (eitherResIdent (T_Name . share) s)) }
+    { tok (\p s -> PT p (eitherResIdent T_Name s)) }
 
 $l $i*
-    { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
+    { tok (\p s -> PT p (eitherResIdent TV s)) }
 
 
 
@@ -47,9 +47,6 @@ $l $i*
 
 tok :: (Posn -> Data.Text.Text -> Token) -> (Posn -> Data.Text.Text -> Token)
 tok f p s = f p s
-
-share :: Data.Text.Text -> Data.Text.Text
-share = id
 
 data Tok =
    TS !Data.Text.Text !Int    -- reserved words and symbols

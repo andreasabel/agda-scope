@@ -2,7 +2,6 @@ module HierMod.Layout where
 
 import HierMod.Lex
 
-
 import qualified Data.Text
 import Data.Maybe (isNothing, fromJust)
 
