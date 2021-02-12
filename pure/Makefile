@@ -3,13 +3,13 @@
 ## Variables
 ###########################################################################
 
-grammar		=HierMod
+grammar         = src/HierMod
 
-genhsfiles	=$(grammar)/Print.hs $(grammar)/ErrM.hs
-gengenhsfiles	=$(grammar)/Lex.hs $(grammar)/Par.hs
-genfiles        =$(genhsfiles) $(gengenhsfiles)
+genhsfiles      = $(grammar)/Print.hs
+gengenhsfiles   = $(grammar)/Lex.hs $(grammar)/Par.hs
+genfiles        = $(genhsfiles) $(gengenhsfiles)
 
-ghcflags	=--ghc-flag=-i../haskell --ghc-flag=-Wwarn
+ghcflags        = --ghc-flag=-i../haskell --ghc-flag=-Wwarn
 
 ###########################################################################
 
@@ -33,8 +33,8 @@ test : $(main)
 	! ./$(main) test/ShadowPrivate.agda
 
 
-Main : Main.hs ScopeChecker.hs $(genfiles)
-	ghc $<
+Main : Main.hs src/ScopeChecker.hs $(genfiles)
+	ghc -i. -isrc $<
 
 # Just the parser
 
@@ -43,8 +43,8 @@ test-parser : $(grammar)/Test
 
 # Rules to build the parser:
 
-$(grammar)/Test.hs $(grammar)/Lex.x $(grammar)/Par.y $(genhsfiles)  : $(grammar).cf
-	bnfc --haskell -d $<
+$(grammar)/Test.hs $(grammar)/Lex.x $(grammar)/Par.y $(genhsfiles) : $(grammar).cf
+	bnfc --haskell -o src -d $<
 
 %.hs : %.y
 	happy -gcai $<
