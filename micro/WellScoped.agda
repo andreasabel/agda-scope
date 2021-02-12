@@ -12,7 +12,7 @@ data Access : Set where
   priv : Access  -- Private access only from within the module and its parents. Not Exported.
 
 variable
-  p : Access
+  p p' : Access
 
 data FlowTo : Access → Access → Set where
   publFlow : FlowTo publ p      -- Public can flow everywhere.
@@ -25,9 +25,9 @@ Scope = List C.Decls  -- snoc list
 variable
   s  : C.Decl
   ss : C.Decls
-  sc : Scope
-  x  : C.Name
-  xs : C.QName
+  sc sc' : Scope
+  x x' y : C.Name
+  xs xs' : C.QName
 
 -- A "de Bruijn index": path of a name to its declaration.
 
@@ -138,7 +138,41 @@ slookupAll p xs [] = emptyEnum λ()
 slookupAll p xs (ss ∷ sc) with llookupAll p xs ss | slookupAll p xs sc
 slookupAll p xs (ss ∷ sc) | e | e' = appendEnum site parent sname-surjective e e'
 
--- Looking up possible resolutions of a name, discarding shadowed names of parents.
+-- Looking up possible resolutions of a name, discarding shadowed names of parents
+-- ===============================================================================
+
+-- There are two implementations that differ in the resolution of qualified names
+-- like M.N
+--
+-- Alternative 1 (slookup):  Flat scope.
+----------------------------------------
+--
+-- We consider the scope as a map from qualified names to content.
+-- Children content shadows parent content, but if parent defines M.N and
+-- child M.O, then M.N is still in scope.
+--
+-- Basically modules with the same name M get merged with child
+-- content shadowing parent content.
+--
+-- Alternative 2 (sclookup):  Nested scope.
+-------------------------------------------
+--
+-- We consider the scope as a map from single names to content.
+-- The content may contain scopes again.
+--
+-- If the parent defines M.N and the child a module M, then the M.N of
+-- the parent is no longer in scope even if the child does not define
+-- M.N.
+--
+-- Since Agda does not allow shadowing of parent content by child
+-- content, these alternatives coincide.  However, with a proposed
+-- revision of Agda (issue #3801), these alternatives differ.  We
+-- settle for the stricter alternative 2.  This does not merge modules.
+
+-- Implementation of alternative 1 (slookup).
+---------------------------------------------------------------------------
+--
+-- We lookup up the total qualified name, combining results.
 
 mutual
   lookup : ∀ p xs s → List (Name p xs s)
@@ -163,13 +197,68 @@ mutual
   llookup p xs (C.dSnoc ss s) with lookup p xs s | llookup p xs ss
   llookup p xs (C.dSnoc ss s) | ns | ns' = map here ns ++ map there ns'  -- no shadowing of siblings!
 
-slookup : ∀ p xs ss → List (SName p xs ss)
+slookup : ∀ p xs sc → List (SName p xs sc)
 -- List exhausted
 slookup p xs [] = []
 -- In head?, in tail?
 slookup p xs (ss ∷ sc) with llookup p xs ss | slookup p xs sc
 slookup p xs (ss ∷ sc) | [] | ns = map parent ns  -- only keep when current site does not resolve the name
 slookup p xs (ss ∷ sc) | ns | _  = map site   ns  -- discard parent occurrences if current site has one
+
+-- Implementation of alternative 2 (sclookup)
+---------------------------------------------------------------------------
+--
+-- Uses a success continuation f and a failure continuation ns.
+-- Whenever we step into a module, we commit to this choice,
+-- discarding the failure continuation.
+
+mutual
+
+  -- Lookup in a declaration
+
+  clookup : ∀ p xs s
+    → (List (Name p xs s) → List (SName p' xs' sc))
+    → List (SName p' xs' sc)
+    → List (SName p' xs' sc)
+  -- C.ref does not declare a name.
+  clookup p xs (C.ref q) f ns = ns
+  -- Step inside private blocks.
+  clookup publ xs (C.priv _ ) f ns = ns
+  clookup priv xs (C.priv ps) f ns = lclookup priv xs ps (f ∘ map inpriv) ns
+  -- Resolve CName.
+  clookup p (C.qName x) (C.modl y ss) f ns with x C.≟ y
+  clookup p (C.qName x) (C.modl x ss) f ns | yes!  = f (modl x ∷ [])
+  clookup p (C.qName x) (C.modl y ss) f ns | no ¬p = ns
+  -- Resolve qualification.
+  clookup p (C.qual x xs) (C.modl y ss) f ns with x C.≟ y
+  -- When we step into a module, we discard the alternatives!  No backtracking here!
+  clookup p (C.qual x xs) (C.modl x ss) f ns | yes!  = lclookup publ xs ss (f ∘ map (inside x)) []
+  clookup p (C.qual x xs) (C.modl y ss) f ns | no ¬p = ns
+
+  -- Lookup in a list of declarations
+
+  lclookup : ∀ p xs ss
+    → (List (LName p xs ss) → List (SName p' xs' sc))
+    → List (SName p' xs' sc)
+    → List (SName p' xs' sc)
+  -- List exhausted
+  lclookup p xs C.dNil         f ns = ns
+  -- In head?, in tail?
+  lclookup p xs (C.dSnoc ss s) f ns = clookup p xs s (λ ns → f (map here ns) ++ ns') ns'
+    where
+    -- The fallback ns' is also propagated to the successful case.
+    -- No shadowing of siblings!
+    ns' = lclookup p xs ss (f ∘ map there) ns
+
+-- Lookup in the scope
+
+sclookup : ∀ p xs sc → List (SName p xs sc)
+-- List exhausted
+sclookup p xs [] = []
+-- In head?, in tail?
+sclookup p xs (ss ∷ sc) = lclookup p xs ss (map site) (map parent (sclookup p xs sc))
+  -- only keep parent alternatives when current site does not resolve the name
+  -- discard parent occurrences if current site has one
 
 
 -- Well-scoped declarations

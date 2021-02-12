@@ -8,7 +8,7 @@ open import WellScoped as A
 -- Scope errors
 
 data ScopeError : Set where
-  notInScope' : ∀ (xs : C.QName) → ScopeError
+  notInScope' : (xs : C.QName) → ScopeError
   notInScope  : (¬n : ¬ SName p xs sc) → ScopeError
   shadows     : (n : SName p xs sc) → ScopeError
   ambiguous   : (n₁ n₂ : SName p xs sc) (ns : List (SName p xs sc)) → ScopeError
@@ -33,27 +33,25 @@ pattern fail err = inj₁ err
 mutual
   checkDecl : (d : C.Decl) (sc : Scope) → M (A.Decl sc d)
 
-  -- Agda <= 2.6.0 style: current site may not shadow parents
+  -- Agda <= 2.6.1 style: current site may not shadow parents
   -- checkDecl (C.ref xs) sc with slookupAll xs sc
   -- ... | enum (n ∷ [])       _ = return (ref n)
   -- ... | enum []            ¬n = fail (notInScope λ n → case ¬n n of λ())
   -- ... | enum (n₁ ∷ n₂ ∷ ns) _ = fail (ambiguous n₁ n₂ ns)
   -- ALT: current site may shadow parents
-  checkDecl (C.ref xs) sc with slookup priv xs sc
+  checkDecl (C.ref xs) sc with sclookup priv xs sc
   ... | (n ∷ [])       = return (ref n)
   ... | []             = fail (notInScope' xs)
   ... | (n₁ ∷ n₂ ∷ ns) = fail (ambiguous n₁ n₂ ns)
 
-  -- Agda <= 2.6.0 style shadowing rules: x must not be in scope
+  -- Agda <= 2.6.1 style shadowing rules: x must not be in scope
   -- checkDecl (C.modl x ds) sc with sname? (C.qName x) sc
   -- ... | yes n = fail (shadows n)
   -- ... | no  _ = do
   -- ALT shadowing rules: x must not be in scope in current site
   checkDecl (C.modl x ds) sc with slookup priv (C.qName x) sc
   ... | (site n ∷ _) = fail (shadows (site {sc = sc} n))
-  ... | _ = do
-    ds' ← checkDecls ds sc
-    return (modl x ds')
+  ... | _            = modl x <$> checkDecls ds sc
 
   checkDecl (C.priv ds) sc = A.priv <$> checkDecls ds sc
 
