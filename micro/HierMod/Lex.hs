@@ -5,6 +5,8 @@
 {-# OPTIONS_GHC -w #-}
 module HierMod.Lex where
 
+import Prelude
+
 import qualified Data.Text
 import qualified Data.Bits
 import Data.Word (Word8)
@@ -90,7 +92,7 @@ alex_actions = array (0 :: Int, 3)
   , (0,alex_action_4)
   ]
 
-{-# LINE 46 "HierMod/Lex.x" #-}
+{-# LINE 48 "HierMod/Lex.x" #-}
 tok :: (Posn -> Data.Text.Text -> Token) -> (Posn -> Data.Text.Text -> Token)
 tok f p s = f p s
 

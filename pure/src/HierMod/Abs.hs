@@ -3,14 +3,13 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+-- | The abstract syntax of language HierMod.
+
 module HierMod.Abs where
 
-import Prelude (Char, Double, Integer, String)
+import Prelude (String)
 import qualified Prelude as C (Eq, Ord, Show, Read)
 import qualified Data.String
-
-newtype Name = Name String
-  deriving (C.Eq, C.Ord, C.Show, C.Read, Data.String.IsString)
 
 data Program = Prg Name [Decl]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
@@ -21,4 +20,7 @@ data Decl
     | Open [Name]
     | OpenPublic [Name]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+newtype Name = Name String
+  deriving (C.Eq, C.Ord, C.Show, C.Read, Data.String.IsString)
 

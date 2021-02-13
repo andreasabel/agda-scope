@@ -9,9 +9,13 @@ module HierMod.Par
   , pDecls
   , pQName
   ) where
+
+import Prelude
+
 import qualified HierMod.Abs
 import HierMod.Lex
 import qualified Data.Text
+
 }
 
 %name pProgram Program
@@ -19,7 +23,7 @@ import qualified Data.Text
 %name pDecls Decls
 %name pQName QName
 -- no lexer declaration
-%monad { Either String } { (>>=) } { return }
+%monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
   '(' { PT _ (TS _ 1) }
@@ -37,7 +41,7 @@ import qualified Data.Text
 
 %%
 
-Name :: { HierMod.Abs.Name}
+Name :: { HierMod.Abs.Name }
 Name  : L_Name { HierMod.Abs.Name $1 }
 
 Program :: { HierMod.Abs.Program }
@@ -58,7 +62,9 @@ QName : Name { HierMod.Abs.QName $1 }
       | Name '.' QName { HierMod.Abs.Qual $1 $3 }
 {
 
-happyError :: [Token] -> Either String a
+type Err = Either String
+
+happyError :: [Token] -> Err a
 happyError ts = Left $
   "syntax error at " ++ tokenPos ts ++
   case ts of
@@ -66,6 +72,8 @@ happyError ts = Left $
     [Err _] -> " due to lexer error"
     t:_     -> " before `" ++ (prToken t) ++ "'"
 
+myLexer :: Data.Text.Text -> [Token]
 myLexer = tokens
+
 }
 

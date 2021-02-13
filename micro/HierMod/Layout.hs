@@ -1,5 +1,7 @@
 module HierMod.Layout where
 
+import Prelude
+
 import HierMod.Lex
 
 import qualified Data.Text
@@ -48,7 +50,7 @@ resolveLayout tp = res Nothing [if tl then Implicit 1 else Explicit]
     | isLayoutOpen t0 = moveAlong (Explicit:st) [t0] ts
 
   -- We are in an implicit layout block
-  res pt st@(Implicit n:ns) (t0:ts)
+  res pt (Implicit n:ns) (t0:ts)
 
       -- End of implicit block by a layout stop word
     | isStop t0 =
@@ -95,7 +97,7 @@ resolveLayout tp = res Nothing [if tl then Implicit 1 else Explicit]
                     | newLine pt t0 && column t0 == n
                       && not (isNothing pt ||
                               isTokenIn [layoutSep,layoutOpen] (fromJust pt)) ->
-                     let b':t0':b'':ts'' =
+                     let b':t0':b'':_ =
                            addToken (afterPrev pt) layoutSep (t0:b:ts')
                      in moveAlong st' [b',t0',b''] ts'
                   _ -> moveAlong st' [t0,b] ts'
@@ -110,7 +112,7 @@ resolveLayout tp = res Nothing [if tl then Implicit 1 else Explicit]
                  else moveAlong st' [t0] ts
 
   -- Insert separator if necessary.
-  res pt st@(Implicit n:ns) (t0:ts)
+  res pt st@(Implicit n : _) (t0:ts)
     -- Encounted a new line in an implicit layout block.
     | newLine pt t0 && column t0 == n =
        -- Insert a semicolon after the previous token.
@@ -135,7 +137,7 @@ resolveLayout tp = res Nothing [if tl then Implicit 1 else Explicit]
       | otherwise = addToken (nextPos t) layoutSep []
 
   -- At EOF in an implicit, non-top-level block: close the block
-  res (Just t) (Implicit _n:bs) [] =
+  res (Just t) (Implicit _ : bs) [] =
      let c = addToken (nextPos t) layoutClose []
       in moveAlong bs c []
 

@@ -1,8 +1,10 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE LambdaCase #-}
 #if __GLASGOW_HASKELL__ <= 708
 {-# LANGUAGE OverlappingInstances #-}
 #endif
-{-# LANGUAGE FlexibleInstances #-}
+
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -- | Pretty-printer for HierMod.
@@ -10,8 +12,16 @@
 
 module HierMod.Print where
 
+import Prelude
+  ( ($), (.)
+  , Bool(..), (==), (<)
+  , Int, Integer, Double, (+), (-), (*)
+  , String, (++)
+  , ShowS, showChar, showString
+  , all, dropWhile, elem, foldr, id, map, null, replicate, shows, span
+  )
+import Data.Char ( Char, isSpace )
 import qualified HierMod.Abs
-import Data.Char
 import qualified Data.Text
 
 -- | The top-level printing method.
@@ -26,7 +36,7 @@ doc = (:)
 
 render :: Doc -> String
 render d = rend 0 (map ($ "") $ d []) "" where
-  rend i ss = case ss of
+  rend i = \case
     "["      :ts -> showChar '[' . rend i ts
     "("      :ts -> showChar '(' . rend i ts
     "{"      :ts -> showChar '{' . new (i+1) . rend (i+1) ts
@@ -78,16 +88,16 @@ instance {-# OVERLAPPABLE #-} Print a => Print [a] where
   prt = prtList
 
 instance Print Char where
-  prt _ s = doc (showChar '\'' . mkEsc '\'' s . showChar '\'')
+  prt     _ s = doc (showChar '\'' . mkEsc '\'' s . showChar '\'')
   prtList _ s = doc (showChar '"' . concatS (map (mkEsc '"') s) . showChar '"')
 
 mkEsc :: Char -> Char -> ShowS
-mkEsc q s = case s of
-  _ | s == q -> showChar '\\' . showChar s
-  '\\'-> showString "\\\\"
+mkEsc q = \case
+  s | s == q -> showChar '\\' . showChar s
+  '\\' -> showString "\\\\"
   '\n' -> showString "\\n"
   '\t' -> showString "\\t"
-  _ -> showChar s
+  s -> showChar s
 
 prPrec :: Int -> Int -> Doc -> Doc
 prPrec i j = if j < i then parenth else id
@@ -102,22 +112,22 @@ instance Print HierMod.Abs.Name where
   prt _ (HierMod.Abs.Name i) = doc $ showString $ Data.Text.unpack i
 
 instance Print HierMod.Abs.Program where
-  prt i e = case e of
+  prt i = \case
     HierMod.Abs.Prg name decls -> prPrec i 0 (concatD [doc (showString "module"), prt 0 name, doc (showString "where"), doc (showString "{"), prt 0 decls, doc (showString "}")])
 
 instance Print HierMod.Abs.Decl where
-  prt i e = case e of
+  prt i = \case
     HierMod.Abs.Modl name decls -> prPrec i 0 (concatD [doc (showString "module"), prt 0 name, doc (showString "where"), doc (showString "{"), prt 0 decls, doc (showString "}")])
     HierMod.Abs.Ref qname -> prPrec i 0 (concatD [doc (showString "open"), prt 0 qname, doc (showString "using"), doc (showString "("), doc (showString ")")])
     HierMod.Abs.Priv decls -> prPrec i 0 (concatD [doc (showString "private"), doc (showString "{"), prt 0 decls, doc (showString "}")])
 
 instance Print HierMod.Abs.Decls where
-  prt i e = case e of
+  prt i = \case
     HierMod.Abs.DNil -> prPrec i 0 (concatD [])
     HierMod.Abs.DSnoc decls decl -> prPrec i 0 (concatD [prt 0 decls, doc (showString ";"), prt 0 decl])
 
 instance Print HierMod.Abs.QName where
-  prt i e = case e of
+  prt i = \case
     HierMod.Abs.QName name -> prPrec i 0 (concatD [prt 0 name])
     HierMod.Abs.Qual name qname -> prPrec i 0 (concatD [prt 0 name, doc (showString "."), prt 0 qname])
 

@@ -2,23 +2,31 @@
 
 module Main where
 
-import System.Environment ( getArgs, getProgName )
+import Prelude
+  ( ($)
+  , Bool(..)
+  , Either(..)
+  , Int, (>)
+  , String, (++), unlines
+  , Show, show
+  , IO, (>>), (>>=), mapM_, putStrLn
+  , FilePath
+  , getContents, readFile
+  )
+import System.Environment ( getArgs )
 import System.Exit        ( exitFailure, exitSuccess )
 import Control.Monad      ( when )
 
-import HierMod.Lex    ( Token )
-import HierMod.Par    ( pProgram, myLexer )
-import HierMod.Skel   ()
-import HierMod.Print  ( Print, printTree )
 import HierMod.Abs    ()
 import HierMod.Layout ( resolveLayout )
+import HierMod.Lex    ( Token )
+import HierMod.Par    ( pProgram, myLexer )
+import HierMod.Print  ( Print, printTree )
+import HierMod.Skel   ()
 
-type Err = Either String
+type Err        = Either String
 type ParseFun a = [Token] -> Err a
-
-myLLexer = resolveLayout True . myLexer
-
-type Verbosity = Int
+type Verbosity  = Int
 
 putStrV :: Verbosity -> String -> IO ()
 putStrV v s = when (v > 1) $ putStrLn s
@@ -27,27 +35,25 @@ runFile :: (Print a, Show a) => Verbosity -> ParseFun a -> FilePath -> IO ()
 runFile v p f = putStrLn f >> readFile f >>= run v p
 
 run :: (Print a, Show a) => Verbosity -> ParseFun a -> String -> IO ()
-run v p s = case p ts of
-    Left s -> do
+run v p s =
+  case p ts of
+    Left err -> do
       putStrLn "\nParse              Failed...\n"
       putStrV v "Tokens:"
       putStrV v $ show ts
-      putStrLn s
+      putStrLn err
       exitFailure
     Right tree -> do
       putStrLn "\nParse Successful!"
       showTree v tree
-
       exitSuccess
   where
-  ts = myLLexer s
-
+  ts = resolveLayout True $ myLexer s
 
 showTree :: (Show a, Print a) => Int -> a -> IO ()
-showTree v tree
- = do
-      putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
-      putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
+showTree v tree = do
+  putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
+  putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
 
 usage :: IO ()
 usage = do
@@ -65,7 +71,7 @@ main = do
   args <- getArgs
   case args of
     ["--help"] -> usage
-    [] -> getContents >>= run 2 pProgram
-    "-s":fs -> mapM_ (runFile 0 pProgram) fs
-    fs -> mapM_ (runFile 2 pProgram) fs
+    []         -> getContents >>= run 2 pProgram
+    "-s":fs    -> mapM_ (runFile 0 pProgram) fs
+    fs         -> mapM_ (runFile 2 pProgram) fs
 

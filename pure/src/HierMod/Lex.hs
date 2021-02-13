@@ -1,9 +1,11 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-missing-signatures #-}
 {-# LANGUAGE CPP,MagicHash #-}
-{-# LINE 3 "HierMod/Lex.x" #-}
+{-# LINE 3 "src/HierMod/Lex.x" #-}
 {-# OPTIONS -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -w #-}
 module HierMod.Lex where
+
+import Prelude
 
 import qualified Data.Bits
 import Data.Word (Word8)
@@ -89,7 +91,7 @@ alex_actions = array (0 :: Int, 3)
   , (0,alex_action_4)
   ]
 
-{-# LINE 45 "HierMod/Lex.x" #-}
+{-# LINE 47 "src/HierMod/Lex.x" #-}
 tok :: (Posn -> String -> Token) -> (Posn -> String -> Token)
 tok f p s = f p s
 

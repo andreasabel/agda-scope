@@ -9,8 +9,12 @@ module HierMod.Par
   , pListDecl
   , pListName
   ) where
+
+import Prelude
+
 import qualified HierMod.Abs
 import HierMod.Lex
+
 }
 
 %name pProgram Program
@@ -18,7 +22,7 @@ import HierMod.Lex
 %name pListDecl ListDecl
 %name pListName ListName
 -- no lexer declaration
-%monad { Either String } { (>>=) } { return }
+%monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
   '.' { PT _ (TS _ 1) }
@@ -34,7 +38,7 @@ import HierMod.Lex
 
 %%
 
-Name :: { HierMod.Abs.Name}
+Name :: { HierMod.Abs.Name }
 Name  : L_Name { HierMod.Abs.Name $1 }
 
 Program :: { HierMod.Abs.Program }
@@ -55,7 +59,9 @@ ListName :: { [HierMod.Abs.Name] }
 ListName : Name { (:[]) $1 } | Name '.' ListName { (:) $1 $3 }
 {
 
-happyError :: [Token] -> Either String a
+type Err = Either String
+
+happyError :: [Token] -> Err a
 happyError ts = Left $
   "syntax error at " ++ tokenPos ts ++
   case ts of
@@ -63,6 +69,8 @@ happyError ts = Left $
     [Err _] -> " due to lexer error"
     t:_     -> " before `" ++ (prToken t) ++ "'"
 
+myLexer :: String -> [Token]
 myLexer = tokens
+
 }
 

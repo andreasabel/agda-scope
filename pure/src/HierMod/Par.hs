@@ -12,6 +12,9 @@ module HierMod.Par
   , pListDecl
   , pListName
   ) where
+
+import Prelude
+
 import qualified HierMod.Abs
 import HierMod.Lex
 import qualified Data.Array as Happy_Data_Array
@@ -250,14 +253,14 @@ happyNewToken action sts stk (tk:tks) =
 happyError_ explist 11# tk tks = happyError' (tks, explist)
 happyError_ explist _ tk tks = happyError' ((tk:tks), explist)
 
-happyThen :: () => Either String a -> (a -> Either String b) -> Either String b
+happyThen :: () => Err a -> (a -> Err b) -> Err b
 happyThen = ((>>=))
-happyReturn :: () => a -> Either String a
+happyReturn :: () => a -> Err a
 happyReturn = (return)
 happyThen1 m k tks = ((>>=)) m (\a -> k a tks)
-happyReturn1 :: () => a -> b -> Either String a
+happyReturn1 :: () => a -> b -> Err a
 happyReturn1 = \a tks -> (return) a
-happyError' :: () => ([(Token)], [String]) -> Either String a
+happyError' :: () => ([(Token)], [String]) -> Err a
 happyError' = (\(tokens, _) -> happyError tokens)
 pProgram tks = happySomeParser where
  happySomeParser = happyThen (happyParse 0# tks) (\x -> happyReturn (let {(HappyWrap8 x') = happyOut8 x} in x'))
@@ -274,7 +277,9 @@ pListName tks = happySomeParser where
 happySeq = happyDontSeq
 
 
-happyError :: [Token] -> Either String a
+type Err = Either String
+
+happyError :: [Token] -> Err a
 happyError ts = Left $
   "syntax error at " ++ tokenPos ts ++
   case ts of
@@ -282,6 +287,7 @@ happyError ts = Left $
     [Err _] -> " due to lexer error"
     t:_     -> " before `" ++ (prToken t) ++ "'"
 
+myLexer :: String -> [Token]
 myLexer = tokens
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- $Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp $

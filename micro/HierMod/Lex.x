@@ -5,6 +5,8 @@
 {-# OPTIONS_GHC -w #-}
 module HierMod.Lex where
 
+import Prelude
+
 import qualified Data.Text
 import qualified Data.Bits
 import Data.Word (Word8)
