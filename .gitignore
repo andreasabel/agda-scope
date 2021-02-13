@@ -1,6 +1,7 @@
 *~
 *.agdai
 *.bak
+*.bbl
 *.blg
 *.o
 *.hi
@@ -38,3 +39,4 @@ texput.log
 /notes/medium.bib
 /ghc-bug/
 /docs/
+/notes/agdaShadowing.tex
