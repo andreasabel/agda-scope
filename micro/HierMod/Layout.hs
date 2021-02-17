@@ -225,10 +225,11 @@ sToken p s = PT p (TS (Data.Text.pack s) i)
       "module" -> 5
       "open" -> 6
       "private" -> 7
-      "using" -> 8
-      "where" -> 9
-      "{" -> 10
-      "}" -> 11
+      "public" -> 8
+      "using" -> 9
+      "where" -> 10
+      "{" -> 11
+      "}" -> 12
       _ -> error $ "not a reserved word: " ++ show s
 
 -- | Get the position of a token.

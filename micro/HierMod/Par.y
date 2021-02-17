@@ -7,6 +7,7 @@ module HierMod.Par
   , pProgram
   , pDecl
   , pDecls
+  , pImportDirective
   , pQName
   ) where
 
@@ -21,6 +22,7 @@ import qualified Data.Text
 %name pProgram Program
 %name pDecl Decl
 %name pDecls Decls
+%name pImportDirective ImportDirective
 %name pQName QName
 -- no lexer declaration
 %monad { Err } { (>>=) } { return }
@@ -33,10 +35,11 @@ import qualified Data.Text
   'module' { PT _ (TS _ 5) }
   'open' { PT _ (TS _ 6) }
   'private' { PT _ (TS _ 7) }
-  'using' { PT _ (TS _ 8) }
-  'where' { PT _ (TS _ 9) }
-  '{' { PT _ (TS _ 10) }
-  '}' { PT _ (TS _ 11) }
+  'public' { PT _ (TS _ 8) }
+  'using' { PT _ (TS _ 9) }
+  'where' { PT _ (TS _ 10) }
+  '{' { PT _ (TS _ 11) }
+  '}' { PT _ (TS _ 12) }
   L_Name { PT _ (T_Name $$) }
 
 %%
@@ -49,13 +52,18 @@ Program : 'module' Name 'where' '{' Decls '}' { HierMod.Abs.Prg $2 $5 }
 
 Decl :: { HierMod.Abs.Decl }
 Decl : 'module' Name 'where' '{' Decls '}' { HierMod.Abs.Modl $2 $5 }
-     | 'open' QName 'using' '(' ')' { HierMod.Abs.Ref $2 }
+     | 'open' QName ImportDirective { HierMod.Abs.Opn $2 $3 }
      | 'private' '{' Decls '}' { HierMod.Abs.Priv $3 }
 
 Decls :: { HierMod.Abs.Decls }
 Decls : {- empty -} { HierMod.Abs.DNil }
       | Decls ';' Decl { HierMod.Abs.DSnoc $1 $3 }
       | Decl { HierMod.Abs.dSg $1 }
+
+ImportDirective :: { HierMod.Abs.ImportDirective }
+ImportDirective : {- empty -} { HierMod.Abs.ImportPrivate }
+                | 'public' { HierMod.Abs.ImportPublic }
+                | 'using' '(' ')' { HierMod.Abs.ImportNothing }
 
 QName :: { HierMod.Abs.QName }
 QName : Name { HierMod.Abs.QName $1 }

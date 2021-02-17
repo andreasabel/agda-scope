@@ -15,6 +15,7 @@ open import HierMod.AST using
   ( Program
   ; Decl
   ; Decls
+  ; ImportDirective
   ; QName
   )
 
@@ -41,9 +42,11 @@ postulate
   parseProgram : #Bool → #String → Err Program
   parseDecl : #Bool → #String → Err Decl
   parseDecls : #Bool → #String → Err Decls
+  parseImportDirective : #Bool → #String → Err ImportDirective
   parseQName : #Bool → #String → Err QName
 
 {-# COMPILE GHC parseProgram = \ tl -> pProgram . HierMod.Layout.resolveLayout tl . myLexer #-}
 {-# COMPILE GHC parseDecl = \ tl -> pDecl . HierMod.Layout.resolveLayout tl . myLexer #-}
 {-# COMPILE GHC parseDecls = \ tl -> pDecls . HierMod.Layout.resolveLayout tl . myLexer #-}
+{-# COMPILE GHC parseImportDirective = \ tl -> pImportDirective . HierMod.Layout.resolveLayout tl . myLexer #-}
 {-# COMPILE GHC parseQName = \ tl -> pQName . HierMod.Layout.resolveLayout tl . myLexer #-}

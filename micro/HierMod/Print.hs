@@ -118,13 +118,19 @@ instance Print HierMod.Abs.Program where
 instance Print HierMod.Abs.Decl where
   prt i = \case
     HierMod.Abs.Modl name decls -> prPrec i 0 (concatD [doc (showString "module"), prt 0 name, doc (showString "where"), doc (showString "{"), prt 0 decls, doc (showString "}")])
-    HierMod.Abs.Ref qname -> prPrec i 0 (concatD [doc (showString "open"), prt 0 qname, doc (showString "using"), doc (showString "("), doc (showString ")")])
+    HierMod.Abs.Opn qname importdirective -> prPrec i 0 (concatD [doc (showString "open"), prt 0 qname, prt 0 importdirective])
     HierMod.Abs.Priv decls -> prPrec i 0 (concatD [doc (showString "private"), doc (showString "{"), prt 0 decls, doc (showString "}")])
 
 instance Print HierMod.Abs.Decls where
   prt i = \case
     HierMod.Abs.DNil -> prPrec i 0 (concatD [])
     HierMod.Abs.DSnoc decls decl -> prPrec i 0 (concatD [prt 0 decls, doc (showString ";"), prt 0 decl])
+
+instance Print HierMod.Abs.ImportDirective where
+  prt i = \case
+    HierMod.Abs.ImportPrivate -> prPrec i 0 (concatD [])
+    HierMod.Abs.ImportPublic -> prPrec i 0 (concatD [doc (showString "public")])
+    HierMod.Abs.ImportNothing -> prPrec i 0 (concatD [doc (showString "using"), doc (showString "("), doc (showString ")")])
 
 instance Print HierMod.Abs.QName where
   prt i = \case

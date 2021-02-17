@@ -31,12 +31,12 @@ mutual
 
   data Decl : Set where
     modl : (x : Name) (d : Decls) → Decl
-    ref  : (q : QName) → Decl
+    opn  : (q : QName) (i : ImportDirective) → Decl
     priv : (d : Decls) → Decl
 
   {-# COMPILE GHC Decl = data HierMod.Abs.Decl
     ( HierMod.Abs.Modl
-    | HierMod.Abs.Ref
+    | HierMod.Abs.Opn
     | HierMod.Abs.Priv
     ) #-}
 
@@ -47,6 +47,17 @@ mutual
   {-# COMPILE GHC Decls = data HierMod.Abs.Decls
     ( HierMod.Abs.DNil
     | HierMod.Abs.DSnoc
+    ) #-}
+
+  data ImportDirective : Set where
+    importPrivate : ImportDirective
+    importPublic  : ImportDirective
+    importNothing : ImportDirective
+
+  {-# COMPILE GHC ImportDirective = data HierMod.Abs.ImportDirective
+    ( HierMod.Abs.ImportPrivate
+    | HierMod.Abs.ImportPublic
+    | HierMod.Abs.ImportNothing
     ) #-}
 
   data QName : Set where
@@ -64,14 +75,16 @@ dSg = λ d → dSnoc dNil d
 -- Binding the pretty printers.
 
 postulate
-  printProgram : Program → #String
-  printDecl    : Decl → #String
-  printDecls   : Decls → #String
-  printQName   : QName → #String
-  printName    : Name → #String
+  printProgram         : Program → #String
+  printDecl            : Decl → #String
+  printDecls           : Decls → #String
+  printImportDirective : ImportDirective → #String
+  printQName           : QName → #String
+  printName            : Name → #String
 
 {-# COMPILE GHC printProgram = \ p -> Data.Text.pack (printTree (p :: HierMod.Abs.Program)) #-}
 {-# COMPILE GHC printDecl = \ d -> Data.Text.pack (printTree (d :: HierMod.Abs.Decl)) #-}
 {-# COMPILE GHC printDecls = \ d -> Data.Text.pack (printTree (d :: HierMod.Abs.Decls)) #-}
+{-# COMPILE GHC printImportDirective = \ i -> Data.Text.pack (printTree (i :: HierMod.Abs.ImportDirective)) #-}
 {-# COMPILE GHC printQName = \ q -> Data.Text.pack (printTree (q :: HierMod.Abs.QName)) #-}
 {-# COMPILE GHC printName = \ x -> Data.Text.pack (printTree (x :: HierMod.Abs.Name)) #-}

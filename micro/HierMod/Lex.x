@@ -22,7 +22,7 @@ $i = [$l $d _ ']     -- identifier character
 $u = [. \n]          -- universal: any character
 
 @rsyms =    -- symbols and non-identifier-like reserved words
-   \{ | \} | \( | \) | \; | \.
+   \{ | \} | \; | \( | \) | \.
 
 :-
 
@@ -111,7 +111,7 @@ eitherResIdent tv s = treeFind resWords
                               | s == a = t
 
 resWords :: BTree
-resWords = b "open" 6 (b "." 3 (b ")" 2 (b "(" 1 N N) N) (b "module" 5 (b ";" 4 N N) N)) (b "where" 9 (b "using" 8 (b "private" 7 N N) N) (b "}" 11 (b "{" 10 N N) N))
+resWords = b "private" 7 (b ";" 4 (b ")" 2 (b "(" 1 N N) (b "." 3 N N)) (b "open" 6 (b "module" 5 N N) N)) (b "where" 10 (b "using" 9 (b "public" 8 N N) N) (b "}" 12 (b "{" 11 N N) N))
    where b s n = let bs = Data.Text.pack s
                  in  B bs (TS bs n)
 

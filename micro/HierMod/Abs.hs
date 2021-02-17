@@ -16,10 +16,14 @@ import qualified Data.Text
 data Program = Prg Name Decls
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-data Decl = Modl Name Decls | Ref QName | Priv Decls
+data Decl
+    = Modl Name Decls | Opn QName ImportDirective | Priv Decls
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Decls = DNil | DSnoc Decls Decl
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data ImportDirective = ImportPrivate | ImportPublic | ImportNothing
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data QName = QName Name | Qual Name QName
