@@ -1,3 +1,6 @@
+
+{-# OPTIONS --allow-incomplete-matches #-}
+
 open import Library
 
 module ScopeChecker where
@@ -33,13 +36,13 @@ pattern fail err = inj₁ err
 mutual
   checkDecl : (d : C.Decl) (sc : Scope) → M (A.Decl sc d)
 
-  -- Agda <= 2.6.1 style: current site may not shadow parents
-  -- checkDecl (C.ref xs) sc with slookupAll xs sc
+  -- -- Agda <= 2.6.1 style: current site may not shadow parents
+  -- checkDecl (C.opn xs C.importNothing) sc with slookupAll priv xs sc
   -- ... | enum (n ∷ [])       _ = return (ref n)
   -- ... | enum []            ¬n = fail (notInScope λ n → case ¬n n of λ())
   -- ... | enum (n₁ ∷ n₂ ∷ ns) _ = fail (ambiguous n₁ n₂ ns)
   -- ALT: current site may shadow parents
-  checkDecl (C.ref xs) sc with sclookup priv xs sc
+  checkDecl (C.opn xs C.importNothing) sc with sclookup priv xs sc
   ... | (n ∷ [])       = return (ref n)
   ... | []             = fail (notInScope' xs)
   ... | (n₁ ∷ n₂ ∷ ns) = fail (ambiguous n₁ n₂ ns)
@@ -50,7 +53,7 @@ mutual
   -- ... | no  _ = do
   -- ALT shadowing rules: x must not be in scope in current site
   checkDecl (C.modl x ds) sc with slookup priv (C.qName x) sc
-  ... | (site n ∷ _) = fail (shadows (site {sc = sc} n))
+  ... | (site n ∷ _) = fail (shadows (site {sc = sc} (wk1LName n) ))
   ... | _            = modl x <$> checkDecls ds sc
 
   checkDecl (C.priv ds) sc = A.priv <$> checkDecls ds sc

@@ -13,7 +13,7 @@ layout   "where", "private"  ;
 -- Declarations are modules or references to modules.
 
 Modl.    Decl ::= "module" Name "where" "{" Decls "}"  ; -- A new module with content.
-Ref.     Decl ::= "open" QName "using" "(" ")"         ; -- A reference to a module.
+Opn.     Decl ::= "open" QName ImportDirective         ; -- A reference to a module.
 Priv.    Decl ::= "private" "{" Decls "}"              ; -- A declaring thing in block as private.
 
 DNil.    Decls ::=                ;
@@ -21,6 +21,12 @@ DSnoc.   Decls ::= Decls ";" Decl ;
 dSg.     Decls ::= Decl           ;
 
 define   dSg d = DSnoc DNil d     ;
+
+-- Import directives
+
+ImportPrivate. ImportDirective ::=                 ; -- Import contents private (do not export);
+ImportPublic.  ImportDirective ::= "public"        ; -- Import contents public (export);
+ImportNothing. ImportDirective ::= "using" "(" ")" ; -- Import nothing;
 
 -- Qualified identifiers: non-empty lists of identifiers.
 -- Should not allow spaces around the ".", but this is not easily expressed in BNFC.

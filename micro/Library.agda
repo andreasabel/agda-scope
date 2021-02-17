@@ -21,6 +21,10 @@ open import Data.List.Membership.Propositional    public using (_∈_)
 open import Data.List.Membership.Propositional.Properties
                                                   public using (∈-map⁺; ∈-++⁺ˡ; ∈-++⁺ʳ)
 open import Data.List.Relation.Unary.Any          public using (Any; here; there)
+open import Data.List.Relation.Binary.Sublist.Propositional
+                                                  public using (_⊆_; []; _∷_; _∷ʳ_; ⊆-refl)
+open import Data.List.Relation.Binary.Sublist.Propositional.Properties
+                                                  public using ()
 
 open import Data.List.NonEmpty                    public using (List⁺; _∷_; _∷⁺_)
 
