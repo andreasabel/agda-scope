@@ -32,6 +32,13 @@ test : micmod
 	! ./micmod test/ImportUnexportedOpenPrivate.agda
 	! ./micmod test/Shadowed.agda
 
+# Build using cabal
+
+.PHONY: build
+build : $(genfiles)
+	$(agda) --compile --ghc-dont-call-ghc $(ghcflags) micmod.agda
+	hpack && cabal build -w ghc-9.0.1
+
 # Just the parser
 
 test-parser : $(grammar)/Test
