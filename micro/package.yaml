@@ -9,6 +9,8 @@ category:  Dependent types
 spec-version: 0.34.3
 
 tested-with:
+  # GHC == 7.8.4 would require dependency for Data.Bifunctor (not in base there)
+  - GHC == 7.10.3
   - GHC == 8.0.2
   - GHC == 8.2.2
   - GHC == 8.4.4
@@ -19,8 +21,6 @@ tested-with:
 
 dependencies:
   - base >= 4.3 && < 5
-  - array
-  - text
 
 # ghc-options: -Wall
 
@@ -29,11 +29,15 @@ library:
   # files in HierMod are qualified modules
   source-dirs:     .
   exposed-modules: MAlonzo.Code.Qmicmod
+  dependencies:
+    - array
+    - text
 
   # exclude some modules
   when:
     condition: false
     other-modules:
+      - HierMod.Skel
       - HierMod.Test
 
 executable:
