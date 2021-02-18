@@ -1,5 +1,16 @@
 # Makefile for microscopic module calculus
 
+## Configuration
+###########################################################################
+
+# You may with to overwrite these, e.g.
+# make BIN=./micmod-ghc-8.4.4 test
+
+BIN  = ./micmod
+AGDA = agda
+
+###########################################################################
+
 ## Variables
 ###########################################################################
 
@@ -12,31 +23,35 @@ genfiles        =$(genhsfiles) $(gengenhsfiles) $(genagdafiles)
 
 agdafiles	=Library.agda Concrete.agda WellScoped.agda ScopeChecker.agda
 
-agda		=agda
 ghcflags	=--ghc-flag=-i../haskell --ghc-flag=-Wwarn
 
 ###########################################################################
 
 # List of goals not corresponding to file names.
-.PHONY : sdist clean distclean test parser
+.PHONY : sdist clean distclean parser
 
+.PHONY: default
+default: micmod test
+
+.PHONY: test
 test : micmod
-	./micmod test/Example.agda
-	! ./micmod test/NotInScope.agda
-	! ./micmod test/ScopeErr.agda
-	./micmod test/PrivateInSelf.agda
-	./micmod test/PrivateInParent.agda
-	! ./micmod test/PrivateInSibling.agda
-	./micmod test/Import.agda
-	! ./micmod test/ImportUnexported.agda
-	! ./micmod test/ImportUnexportedOpenPrivate.agda
-	! ./micmod test/Shadowed.agda
+	$(BIN) test/Example.agda
+	! $(BIN) test/NotInScope.agda
+	! $(BIN) test/ScopeErr.agda
+	$(BIN) test/PrivateInSelf.agda
+	$(BIN) test/PrivateInParent.agda
+	! $(BIN) test/PrivateInSibling.agda
+	$(BIN) test/Import.agda
+	! $(BIN) test/ImportUnexported.agda
+	! $(BIN) test/ImportUnexportedOpenPrivate.agda
+	! $(BIN) test/AmbiguousViaOpenPublic.agda
+	! $(BIN) test/Shadowed.agda
 
 # Build using cabal
 
 .PHONY: build
 build : $(genfiles)
-	$(agda) --compile --ghc-dont-call-ghc $(ghcflags) micmod.agda
+	$(AGDA) --compile --ghc-dont-call-ghc $(ghcflags) micmod.agda
 	hpack && cabal build -w ghc-9.0.1
 
 # Just the parser
@@ -48,12 +63,12 @@ parser : Main
 	./Main test/Example.agda
 
 Main : $(grammar)/Main.agda $(genfiles)
-	$(agda) --compile $(ghcflags) $<
+	$(AGDA) --compile $(ghcflags) $<
 
 # The extra dependency $(grammar)/Test ensures that the parser is built from $(grammar).cf
 
 micmod : micmod.agda $(genfiles) $(agdafiles)
-	$(agda) --compile $(ghcflags) $<
+	$(AGDA) --compile $(ghcflags) $<
 
 # Rules to build the parser:
 
