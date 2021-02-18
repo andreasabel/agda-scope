@@ -109,7 +109,7 @@ instance Print Double where
   prt _ x = doc (shows x)
 
 instance Print HierMod.Abs.Name where
-  prt _ (HierMod.Abs.Name i) = doc $ showString $ Data.Text.unpack i
+  prt _ (HierMod.Abs.Name i) = doc $ showString (Data.Text.unpack i)
 
 instance Print HierMod.Abs.Program where
   prt i = \case

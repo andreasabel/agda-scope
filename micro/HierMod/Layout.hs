@@ -249,7 +249,7 @@ column t = case position t of Pn _ _ c -> c
 -- | Check if a token is one of the given symbols.
 isTokenIn :: [String] -> Token -> Bool
 isTokenIn ts t = case t of
-  PT _ (TS r _) | Data.Text.unpack r `elem` ts -> True
+  PT _ (TS r _) | (Data.Text.unpack r) `elem` ts -> True
   _ -> False
 
 -- | Check if a word is a layout start token.
