@@ -16,13 +16,13 @@ open import Data.Sum.Categorical.Left             public using (functor; applica
 open import Data.Bool                             public using (Bool; true; false)
 open import Data.String                           public using (String; _≟_)
 
-open import Data.List.Base                        public using (List; []; _∷_; map; _++_)
+open import Data.List.Base                        public using (List; []; _∷_; _++_)
 open import Data.List.Membership.Propositional    public using (_∈_)
 open import Data.List.Membership.Propositional.Properties
                                                   public using (∈-map⁺; ∈-++⁺ˡ; ∈-++⁺ʳ)
 open import Data.List.Relation.Unary.Any          public using (Any; here; there)
 open import Data.List.Relation.Binary.Sublist.Propositional
-                                                  public using (_⊆_; []; _∷_; _∷ʳ_; ⊆-refl)
+                                                  public using (_⊆_; []; _∷_; _∷ʳ_; ⊆-refl; ⊆-trans)
 open import Data.List.Relation.Binary.Sublist.Propositional.Properties
                                                   public using ()
 
@@ -31,28 +31,10 @@ open import Data.List.NonEmpty                    public using (List⁺; _∷_; 
 open import Function                              public using (id; _∘_; _∘′_; _$_; case_of_)
 open import Level                                 public using (_⊔_)
 
-open import Relation.Nullary                      public using (Dec; ¬_) hiding (module Dec)
 open import Relation.Binary.PropositionalEquality public using (_≡_; refl; cong)
+open import Relation.Nullary                      public using (Dec; ¬_) hiding (module Dec)
 
 open import IO.Primitive      public using (IO)
-
--- Utilities
-
-module Dec = Relation.Nullary using (yes; no)
-
-pattern here! = here refl
-pattern yes!  = Dec.yes refl
-
-module String where
-  open import Data.String.Base public
-
--- Has A B similar to Dec (Σ A B)
-
-module Has where
-  data Has {a} {b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
-    yes : {a : A} → B a → Has A B
-    no' : ¬ A → Has A B
-    no  : ({a : A} → ¬ B a) → Has A B
 
 -- Injective functions
 
@@ -68,6 +50,32 @@ private
     → Surjective {B = Any P (x ∷ xs)} [ here , there ]′
   here-there-surjective (here  px)  = inj₁ px  , refl
   here-there-surjective (there pxs) = inj₂ pxs , refl
+
+-- Utilities
+
+module Dec where
+  open        Relation.Nullary           public using (yes; no)
+  open import Relation.Nullary.Decidable using (map′)
+
+  map : ∀{a b} {A : Set a} {B : Set b} {f : A → B} → Surjective f → Dec A → Dec B
+  map {f = f} surj = map′ f (proj₁ ∘ surj)
+
+pattern here! = here refl
+pattern yes!  = Dec.yes refl
+
+module String where
+  open import Data.String.Base public
+
+-- import map after defining Dec.map
+open Data.List.Base public using (map)
+
+-- Has A B similar to Dec (Σ A B)
+
+module Has where
+  data Has {a} {b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
+    yes : {a : A} → B a → Has A B
+    no' : ¬ A → Has A B
+    no  : ({a : A} → ¬ B a) → Has A B
 
 -- Enumerate a type
 

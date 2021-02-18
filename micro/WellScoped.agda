@@ -1,9 +1,11 @@
 -- Abstract syntax, intrinsically well-scoped.
 
-{-# OPTIONS --allow-incomplete-matches #-}
+-- {-# OPTIONS --allow-incomplete-matches #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
-open import Library; open Dec
+open import Library; open Dec using (yes; no)
 import Concrete as C
+open C using (_◇_)
 
 module WellScoped where
 
@@ -20,16 +22,20 @@ data FlowTo : Access → Access → Set where
   publFlow : FlowTo publ p      -- Public can flow everywhere.
   privFlow : FlowTo priv priv   -- Private can only flow to private.
 
+importDirective : Access → C.ImportDirective
+importDirective publ = C.importPublic
+importDirective priv = C.importPrivate
+
 -- A scope is a zipper.
 
 Scope = List C.Decls  -- snoc list
 
 variable
-  s s'   : C.Decl
-  ss ss' : C.Decls
-  sc sc' : Scope
-  x x' y : C.Name
-  xs xs' : C.QName
+  s s'      : C.Decl
+  ss ss'    : C.Decls
+  sc sc'    : Scope
+  x x' y    : C.Name
+  xs xs' ys : C.QName
 
 -- A "de Bruijn index": path of a name to its declaration.
 
@@ -37,25 +43,53 @@ mutual
 
   -- "Name p xs s" means "qualified name xs declared p (or more accessible) in declaration s"
   data Name (sc : Scope) : (p : Access) (xs : C.QName) (s : C.Decl) → Set where
-    modl   : ∀ x                           → Name sc p (C.qName x)   (C.modl x ss)
-    inside : ∀ x (n : LName publ xs sc ss) → Name sc p (C.qual x xs) (C.modl x ss)
-    inpriv :     (n : LName priv xs sc ss) → Name sc priv xs (C.priv ss)
+    -- The name of the module itself.
+    modl     : ∀ x                                → Name sc p    (C.qName x)   (C.modl x ss)
+    -- Declared inside of the module.
+    inside   : ∀ x  (n : LName publ xs sc ss)     → Name sc p    (C.qual x xs) (C.modl x ss)
+    -- Declared in the private block.  Needs priv(ileges).
+    inPriv   :      (n : LName priv xs sc ss)     → Name sc priv xs            (C.priv ss)
+    -- Imported from ys privately. Needs priv(ileges).
+    impPriv  : ∀ ys (n : SName priv (ys ◇ xs) sc) → Name sc priv xs            (C.opn ys C.importPrivate)
+    -- Imported from ys publicly.
+    impPubl  : ∀ ys (n : SName p    (ys ◇ xs) sc) → Name sc p    xs            (C.opn ys C.importPublic)
 
   -- "name xs declared p in one of the declarations ss"
   data LName (p : Access) (xs : C.QName) : (sc : Scope) (ss : C.Decls) → Set where
     here  : ∀{ss s} (n : Name  (ss ∷ sc) p xs s) → LName p xs sc (C.dSnoc ss s)
     there : ∀{ss s} (n : LName       p xs sc ss) → LName p xs sc (C.dSnoc ss s)
 
--- "name xs declared in scope sc"
-data SName (p : Access) (xs : C.QName) : (sc : Scope) → Set where
-  site   : ∀{sc ss} → (n : LName p xs sc ss) → SName p xs (ss ∷ sc)
-  parent : ∀{sc ss} → (n : SName p xs sc)    → SName p xs (ss ∷ sc)
+  -- "name xs declared in scope sc"
+  data SName (p : Access) (xs : C.QName) : (sc : Scope) → Set where
+    site   : ∀{sc ss} → (n : LName p xs sc ss) → SName p xs (ss ∷ sc)
+    parent : ∀{sc ss} → (n : SName p xs sc)    → SName p xs (ss ∷ sc)
+
+-- Inverses
+
+impPriv⁻¹ : (n : Name sc priv xs (C.opn ys C.importPrivate)) → SName priv (ys ◇ xs) sc
+impPriv⁻¹ (impPriv _ n) = n
+
+impPubl⁻¹ : (n : Name sc p xs (C.opn ys C.importPublic)) → SName p (ys ◇ xs) sc
+impPubl⁻¹ (impPubl _ n) = n
+
+-- Proof of surjection
+modl' : x ≡ y → Name sc p (C.qName x) (C.modl y ss)
+modl' refl = modl _
+
+surj-modl : Surjective {A = x ≡ y}{B = Name sc p (C.qName x) (C.modl y ss)} modl'
+surj-modl (modl x) = refl , refl
 
 surj-inside : Surjective {A = LName publ xs sc ss} (inside {p = p} x)
 surj-inside (inside x n) = n , refl
 
-surj-inpriv : Surjective {A = LName priv xs sc ss} inpriv
-surj-inpriv (inpriv n) = n , refl
+surj-inPriv : Surjective {A = LName priv xs sc ss} inPriv
+surj-inPriv (inPriv n) = n , refl
+
+surj-impPriv : Surjective {A = SName priv (ys ◇ xs) sc} (impPriv ys)
+surj-impPriv (impPriv _ n) = n , refl
+
+surj-impPubl : Surjective {A = SName p (ys ◇ xs) sc} (impPubl ys)
+surj-impPubl (impPubl _ n) = n , refl
 
 lname-surjective : Surjective {B = LName p xs sc (C.dSnoc ss s)} [ here , there ]′
 lname-surjective (here  n) = inj₁ n , refl
@@ -71,7 +105,9 @@ mutual
   wkName  : (τ : sc ⊆ sc') (n : Name sc p xs s)   → Name sc' p xs s
   wkName τ (modl x)     = modl x
   wkName τ (inside x n) = inside x (wkLName τ n)
-  wkName τ (inpriv n)   = inpriv   (wkLName τ n)
+  wkName τ (inPriv n)   = inPriv   (wkLName τ n)
+  wkName τ (impPriv ys n) = impPriv ys (wkSName τ n)
+  wkName τ (impPubl ys n) = impPubl ys (wkSName τ n)
 
   wkLName : (τ : sc ⊆ sc') (n : LName p xs sc ss) → LName p xs sc' ss
   wkLName τ (here n)  = here  (wkName (refl ∷ τ) n)
@@ -90,24 +126,28 @@ wk1LName = wkLName (_ ∷ʳ ⊆-refl)
 
 -- Decide whether xs is declared in s/ss/sc.
 
+{-# TERMINATING #-}
 mutual
   name? : ∀ sc p xs s → Dec (Name sc p xs s)
-  -- C.opn C.importNothingdoes not declare a name.
-  name? sc p xs (C.opn q C.importNothing) = no λ()
+  -- C.opn C.importNothing does not declare a name.
+  name? sc p    xs (C.opn q C.importNothing) = no λ()
+  name? sc publ xs (C.opn q C.importPrivate) = no λ()
+  name? sc priv xs (C.opn q C.importPrivate) = Dec.map surj-impPriv (sname? priv (q ◇ xs) sc)
+  name? sc p    xs (C.opn q C.importPublic ) = Dec.map surj-impPubl (sname? p (q ◇ xs) sc)
+  -- name? sc priv xs (C.opn q C.importPrivate) = Dec.map′ (impPriv q) impPriv⁻¹ (sname? priv (q ◇ xs) sc)
+  -- name? sc p    xs (C.opn q C.importPublic ) = Dec.map′ (impPubl q) impPubl⁻¹ (sname? p (q ◇ xs) sc)
+
   -- Step inside private blocks.
   name? sc publ xs (C.priv ss) = no λ()
-  name? sc priv xs (C.priv ss) with lname? priv xs sc ss
-  ... | yes n = yes (inpriv n)
-  ... | no ¬n = no λ{ (inpriv n) → ¬n n }
+  name? sc priv xs (C.priv ss) = Dec.map surj-inPriv (lname? priv xs sc ss)
+
   -- Resolve qualification.
   name? sc p (C.qual x xs) (C.modl y ss) with x C.≟ y | lname? publ xs sc ss
   name? sc p (C.qual x xs) (C.modl x ss) | yes!  | yes n = yes (inside x n)
   name? sc p (C.qual x xs) (C.modl x ss) | yes!  | no ¬n = no λ{ (inside x n) → ¬n n}
   name? sc p (C.qual x xs) (C.modl y ss) | no ¬p | _     = no λ{ (inside x n) → ¬p refl}
   -- Resolve CName.
-  name? sc p (C.qName x) (C.modl y ss) with x C.≟ y
-  name? sc p (C.qName x) (C.modl x ss) | yes!  = yes (Name.modl x)
-  name? sc p (C.qName x) (C.modl y ss) | no ¬p = no λ{ (modl x) → ¬p refl }
+  name? sc p (C.qName x) (C.modl y ss) = Dec.map surj-modl (x C.≟ y)
 
   lname? : ∀ p xs sc ss → Dec (LName p xs sc ss)
   -- List exhausted
@@ -133,13 +173,17 @@ mutual
 
 -- Looking up all possible resolutions of a name (not respecting shadowing).
 
+{-# TERMINATING #-}
 mutual
   lookupAll : ∀ sc p xs s → Enumeration (Name sc p xs s)
   -- C.ref does not declare a name.
-  lookupAll sc p xs (C.opn q C.importNothing)    = emptyEnum λ()
+  lookupAll sc p    xs (C.opn q C.importNothing) = emptyEnum λ()
+  lookupAll sc publ xs (C.opn q C.importPrivate) = emptyEnum λ()
+  lookupAll sc priv xs (C.opn q C.importPrivate) = mapEnum (impPriv _) surj-impPriv (slookupAll priv (q ◇ xs) sc)
+  lookupAll sc p    xs (C.opn q C.importPublic ) = mapEnum (impPubl _) surj-impPubl (slookupAll p    (q ◇ xs) sc)
   -- Step inside private blocks.
   lookupAll sc publ xs (C.priv ss) = emptyEnum λ()
-  lookupAll sc priv xs (C.priv ss) = mapEnum inpriv surj-inpriv (llookupAll priv xs sc ss)
+  lookupAll sc priv xs (C.priv ss) = mapEnum inPriv surj-inPriv (llookupAll priv xs sc ss)
   -- Resolve qualification.
   lookupAll sc p (C.qual x xs) (C.modl y ss) with x C.≟ y | llookupAll publ xs sc ss
   lookupAll sc p (C.qual x xs) (C.modl x ss) | yes!  | e = mapEnum (inside x) surj-inside e
@@ -199,13 +243,17 @@ mutual
 --
 -- We lookup up the total qualified name, combining results.
 
+{-# TERMINATING #-}
 mutual
   lookup : ∀ sc p xs s → List (Name sc p xs s)
   -- C.ref does not declare a name.
-  lookup sc p xs (C.opn q C.importNothing)    = []
+  lookup sc p    xs (C.opn q C.importNothing) = []
+  lookup sc publ xs (C.opn q C.importPrivate) = []
+  lookup sc priv xs (C.opn q C.importPrivate) = map (impPriv _) (slookup priv (q ◇ xs) sc)
+  lookup sc p    xs (C.opn q C.importPublic ) = map (impPubl _) (slookup p    (q ◇ xs) sc)
   -- Step inside private blocks.
   lookup sc publ xs (C.priv ss) = []
-  lookup sc priv xs (C.priv ss) = map inpriv (llookup priv xs sc ss)
+  lookup sc priv xs (C.priv ss) = map inPriv (llookup priv xs sc ss)
   -- Resolve qualification.
   lookup sc p (C.qual x xs) (C.modl y ss) with x C.≟ y | llookup publ xs sc ss
   lookup sc p (C.qual x xs) (C.modl x ss) | yes!  | ns = map (inside x) ns
@@ -290,9 +338,10 @@ mutual
 mutual
 
   data Decl (sc : Scope) : C.Decl → Set where
-    modl : ∀ x  (ds : Decls sc ss) → Decl sc (C.modl x ss)
-    ref  : (n  : SName priv xs sc) → Decl sc (C.opn xs C.importNothing)
-    priv : (ds : Decls sc ss)      → Decl sc (C.priv ss)
+    modl : ∀ x  (ds : Decls sc ss)      → Decl sc (C.modl x ss)
+    priv :      (ds : Decls sc ss)      → Decl sc (C.priv ss)
+    opn  : ∀ (n : SName priv xs sc) dir → Decl sc (C.opn xs dir)  -- TODO: replace dir by Access...
+    -- opn  : ∀ (n : SName priv xs sc) p   → Decl sc (C.opn xs (importDirective p))
 
   data Decls (sc : Scope) : (ss : C.Decls) → Set where
     dNil  : Decls sc C.dNil

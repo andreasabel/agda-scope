@@ -11,6 +11,15 @@ open import HierMod.AST public -- Export AST
 
 -- open import Library using (module String) renaming (_≟_ to _==_)
 
+-- Concatenation of qualified names.
+-- _◇_ is chosen to represent the Semigroup operation (<>) of Haskell.
+
+_◇_ : QName → QName → QName
+qName x   ◇ ys = qual x ys
+qual x xs ◇ ys = qual x (xs ◇ ys)
+
+-- Injectivity and decidability.
+
 module _ {a b} {A : Set a}{B : Set b} where
 
   module _ {f : A → B} (inj : Injective f) where

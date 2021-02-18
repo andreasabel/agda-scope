@@ -27,6 +27,9 @@ test : micmod
 	./micmod test/PrivateInSelf.agda
 	./micmod test/PrivateInParent.agda
 	! ./micmod test/PrivateInSibling.agda
+	./micmod test/Import.agda
+	! ./micmod test/ImportUnexported.agda
+	! ./micmod test/ImportUnexportedOpenPrivate.agda
 	! ./micmod test/Shadowed.agda
 
 # Just the parser

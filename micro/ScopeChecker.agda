@@ -36,16 +36,16 @@ pattern fail err = inj₁ err
 mutual
   checkDecl : (d : C.Decl) (sc : Scope) → M (A.Decl sc d)
 
-  -- -- Agda <= 2.6.1 style: current site may not shadow parents
-  -- checkDecl (C.opn xs C.importNothing) sc with slookupAll priv xs sc
-  -- ... | enum (n ∷ [])       _ = return (ref n)
-  -- ... | enum []            ¬n = fail (notInScope λ n → case ¬n n of λ())
-  -- ... | enum (n₁ ∷ n₂ ∷ ns) _ = fail (ambiguous n₁ n₂ ns)
-  -- ALT: current site may shadow parents
-  checkDecl (C.opn xs C.importNothing) sc with sclookup priv xs sc
-  ... | (n ∷ [])       = return (ref n)
-  ... | []             = fail (notInScope' xs)
-  ... | (n₁ ∷ n₂ ∷ ns) = fail (ambiguous n₁ n₂ ns)
+  -- Agda <= 2.6.1 style: current site may not shadow parents
+  checkDecl (C.opn xs dir) sc with slookupAll priv xs sc
+  ... | enum (n ∷ [])       _ = return (opn n dir)
+  ... | enum []            ¬n = fail (notInScope λ n → case ¬n n of λ())
+  ... | enum (n₁ ∷ n₂ ∷ ns) _ = fail (ambiguous n₁ n₂ ns)
+  -- -- ALT: current site may shadow parents
+  -- checkDecl (C.opn xs dir) sc with sclookup priv xs sc
+  -- ... | (n ∷ [])       = return (opn n dir)
+  -- ... | []             = fail (notInScope' xs)
+  -- ... | (n₁ ∷ n₂ ∷ ns) = fail (ambiguous n₁ n₂ ns)
 
   -- Agda <= 2.6.1 style shadowing rules: x must not be in scope
   -- checkDecl (C.modl x ds) sc with sname? (C.qName x) sc
