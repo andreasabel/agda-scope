@@ -3,16 +3,21 @@
 {
 {-# OPTIONS -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -w #-}
+
+{-# LANGUAGE PatternSynonyms #-}
+
 module HierMod.Lex where
 
 import Prelude
 
 import qualified Data.Text
 import qualified Data.Bits
-import Data.Word (Word8)
-import Data.Char (ord)
+import Data.Char     (ord)
+import Data.Function (on)
+import Data.Word     (Word8)
 }
 
+-- Predefined character classes
 
 $c = [A-Z\192-\221] # [\215]  -- capital isolatin1 letter (215 = \times) FIXME
 $s = [a-z\222-\255] # [\247]  -- small   isolatin1 letter (247 = \div  ) FIXME
@@ -21,71 +26,100 @@ $d = [0-9]           -- digit
 $i = [$l $d _ ']     -- identifier character
 $u = [. \n]          -- universal: any character
 
-@rsyms =    -- symbols and non-identifier-like reserved words
-   \{ | \} | \; | \( | \) | \.
+-- Symbols and non-identifier-like reserved words
+
+@rsyms = \{ | \} | \; | \( | \) | \.
 
 :-
 
--- Line comments
+-- Line comment "--"
 "--" [.]* ;
 
--- Block comments
+-- Block comment "{-" "-}"
 \{ \- [$u # \-]* \- ([$u # [\- \}]] [$u # \-]* \- | \-)* \} ;
 
+-- Whitespace (skipped)
 $white+ ;
+
+-- Symbols
 @rsyms
-    { tok (\p s -> PT p (eitherResIdent TV s)) }
+    { tok (eitherResIdent TV) }
+
+-- token Name
 [$u # [\t \n \f \r \  \" \( \) \- \. \; \@ \{ \}]] +
-    { tok (\p s -> PT p (eitherResIdent T_Name s)) }
+    { tok (eitherResIdent T_Name) }
 
+-- Keywords and Ident
 $l $i*
-    { tok (\p s -> PT p (eitherResIdent TV s)) }
-
-
-
-
+    { tok (eitherResIdent TV) }
 
 {
+-- | Create a token with position.
+tok :: (Data.Text.Text -> Tok) -> (Posn -> Data.Text.Text -> Token)
+tok f p = PT p . f
 
-tok :: (Posn -> Data.Text.Text -> Token) -> (Posn -> Data.Text.Text -> Token)
-tok f p s = f p s
+-- | Token without position.
+data Tok
+  = TK {-# UNPACK #-} !TokSymbol  -- ^ Reserved word or symbol.
+  | TL !Data.Text.Text            -- ^ String literal.
+  | TI !Data.Text.Text            -- ^ Integer literal.
+  | TV !Data.Text.Text            -- ^ Identifier.
+  | TD !Data.Text.Text            -- ^ Float literal.
+  | TC !Data.Text.Text            -- ^ Character literal.
+  | T_Name !Data.Text.Text
+  deriving (Eq, Show, Ord)
 
-data Tok =
-   TS !Data.Text.Text !Int    -- reserved words and symbols
- | TL !Data.Text.Text         -- string literals
- | TI !Data.Text.Text         -- integer literals
- | TV !Data.Text.Text         -- identifiers
- | TD !Data.Text.Text         -- double precision float literals
- | TC !Data.Text.Text         -- character literals
- | T_Name !Data.Text.Text
+-- | Smart constructor for 'Tok' for the sake of backwards compatibility.
+pattern TS :: Data.Text.Text -> Int -> Tok
+pattern TS t i = TK (TokSymbol t i)
 
- deriving (Eq,Show,Ord)
+-- | Keyword or symbol tokens have a unique ID.
+data TokSymbol = TokSymbol
+  { tsText :: Data.Text.Text
+      -- ^ Keyword or symbol text.
+  , tsID   :: !Int
+      -- ^ Unique ID.
+  } deriving (Show)
 
-data Token =
-   PT  Posn Tok
- | Err Posn
-  deriving (Eq,Show,Ord)
+-- | Keyword/symbol equality is determined by the unique ID.
+instance Eq  TokSymbol where (==)    = (==)    `on` tsID
 
+-- | Keyword/symbol ordering is determined by the unique ID.
+instance Ord TokSymbol where compare = compare `on` tsID
+
+-- | Token with position.
+data Token
+  = PT  Posn Tok
+  | Err Posn
+  deriving (Eq, Show, Ord)
+
+-- | Pretty print a position.
 printPosn :: Posn -> String
 printPosn (Pn _ l c) = "line " ++ show l ++ ", column " ++ show c
 
+-- | Pretty print the position of the first token in the list.
 tokenPos :: [Token] -> String
 tokenPos (t:_) = printPosn (tokenPosn t)
-tokenPos [] = "end of file"
+tokenPos []    = "end of file"
 
+-- | Get the position of a token.
 tokenPosn :: Token -> Posn
 tokenPosn (PT p _) = p
-tokenPosn (Err p) = p
+tokenPosn (Err p)  = p
 
+-- | Get line and column of a token.
 tokenLineCol :: Token -> (Int, Int)
 tokenLineCol = posLineCol . tokenPosn
 
+-- | Get line and column of a position.
 posLineCol :: Posn -> (Int, Int)
 posLineCol (Pn _ l c) = (l,c)
 
+-- | Convert a token into "position token" form.
 mkPosToken :: Token -> ((Int, Int), Data.Text.Text)
-mkPosToken t@(PT p _) = (posLineCol p, tokenText t)
+mkPosToken t = (tokenLineCol t, tokenText t)
 
+-- | Convert a token to its text.
 tokenText :: Token -> Data.Text.Text
 tokenText t = case t of
   PT _ (TS s _) -> s
@@ -97,24 +131,43 @@ tokenText t = case t of
   Err _         -> Data.Text.pack "#error"
   PT _ (T_Name s) -> s
 
+-- | Convert a token to a string.
 prToken :: Token -> String
 prToken t = Data.Text.unpack (tokenText t)
 
-data BTree = N | B Data.Text.Text Tok BTree BTree deriving (Show)
+-- | Finite map from text to token organized as binary search tree.
+data BTree
+  = N -- ^ Nil (leaf).
+  | B Data.Text.Text Tok BTree BTree
+      -- ^ Binary node.
+  deriving (Show)
 
+-- | Convert potential keyword into token or use fallback conversion.
 eitherResIdent :: (Data.Text.Text -> Tok) -> Data.Text.Text -> Tok
 eitherResIdent tv s = treeFind resWords
   where
   treeFind N = tv s
-  treeFind (B a t left right) | s < a  = treeFind left
-                              | s > a  = treeFind right
-                              | s == a = t
+  treeFind (B a t left right) =
+    case compare s a of
+      LT -> treeFind left
+      GT -> treeFind right
+      EQ -> t
 
+-- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
-resWords = b "private" 7 (b ";" 4 (b ")" 2 (b "(" 1 N N) (b "." 3 N N)) (b "open" 6 (b "module" 5 N N) N)) (b "where" 10 (b "using" 9 (b "public" 8 N N) N) (b "}" 12 (b "{" 11 N N) N))
-   where b s n = let bs = Data.Text.pack s
-                 in  B bs (TS bs n)
+resWords =
+  b "private" 7
+    (b ";" 4
+       (b ")" 2 (b "(" 1 N N) (b "." 3 N N))
+       (b "open" 6 (b "module" 5 N N) N))
+    (b "where" 10
+       (b "using" 9 (b "public" 8 N N) N) (b "}" 12 (b "{" 11 N N) N))
+  where
+  b s n = B bs (TS bs n)
+    where
+    bs = Data.Text.pack s
 
+-- | Unquote string literal.
 unescapeInitTail :: Data.Text.Text -> Data.Text.Text
 unescapeInitTail = Data.Text.pack . unesc . tail . Data.Text.unpack
   where
@@ -124,9 +177,9 @@ unescapeInitTail = Data.Text.pack . unesc . tail . Data.Text.unpack
     '\\':'t':cs  -> '\t' : unesc cs
     '\\':'r':cs  -> '\r' : unesc cs
     '\\':'f':cs  -> '\f' : unesc cs
-    '"':[]    -> []
-    c:cs      -> c : unesc cs
-    _         -> []
+    '"':[]       -> []
+    c:cs         -> c : unesc cs
+    _            -> []
 
 -------------------------------------------------------------------
 -- Alex wrapper code.
@@ -134,7 +187,7 @@ unescapeInitTail = Data.Text.pack . unesc . tail . Data.Text.unpack
 -------------------------------------------------------------------
 
 data Posn = Pn !Int !Int !Int
-      deriving (Eq, Show,Ord)
+  deriving (Eq, Show, Ord)
 
 alexStartPos :: Posn
 alexStartPos = Pn 0 1 1
@@ -178,7 +231,7 @@ alexInputPrevChar (p, c, bs, s) = c
 -- | Encode a Haskell String to a list of Word8 values, in UTF8 format.
 utf8Encode :: Char -> [Word8]
 utf8Encode = map fromIntegral . go . ord
- where
+  where
   go oc
    | oc <= 0x7f       = [oc]
 
