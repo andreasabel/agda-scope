@@ -22,32 +22,34 @@ interleaved mutual
     ds ds' : Decls sc
 
   -- A definition in a scope.
-  -- So far, we can only define modules, which hold a list of declarations.
+  -- So far, we can only define modules, which hold declarations.
 
-  data Def   (sc : Scope) : Set where
+  data Def (sc : Scope) : Set where
     modl : (ds : Decls sc) → Def sc
+
+  -- We use letter v ("value") for definitions.
 
   variable
     v v' : Def sc
 
   -- A well-scoped name pointing to its definition.
 
-  data ScName : (sc : Scope) → Def sc → Set
+  data Name : (sc : Scope) → Def sc → Set
 
   variable
-    nsc nsc' : ScName sc v
+    n n' : Name sc v
 
   -- A well-scoped declaration is one of
   --
   --   * A module definition.
   --   * Importing the declarations of another module via `open`.
 
-  data Decl  (sc : Scope) : Set where
-    def  : (x : C.Name)   (v : Def sc) → Decl sc
-    opn  : (n : ScName sc (modl ds))   → Decl sc
+  data Decl (sc : Scope) : Set where
+    def  : (x : C.Name) (v : Def sc) → Decl sc
+    opn  : (n : Name sc (modl ds))   → Decl sc
 
   variable
-    d  d'  : Decl sc
+    d d' : Decl sc
 
   -- A scope is a snoc list of lists of declarations.
 
@@ -68,105 +70,99 @@ interleaved mutual
   variable
     τ : sc ⊆ sc'
 
+  -- Weakning by a list of declarations or a single declaration.
+
+  wk1  : sc ⊆ (sc ▷ ds)
+  wk01 : (sc ▷ ds) ⊆ (sc ▷ (ds ▷ d))
+
+  -- Weakening a definition.
+
+  data WkDef (τ : sc ⊆ sc') : Def sc → Def sc' → Set
+
+  variable
+    wv wv' wv₀ : WkDef τ v v'
+
+  -- Names resolving in a list of declarations.
+
+  data DsName (sc : Scope) : (ds : Decls sc) → Def (sc ▷ ds) → Set -- where
+  variable
+    nds nds' : DsName sc ds v
+
+  -- Names resolving in a declaration.
+
+  data DName  (sc : Scope) : Decl sc → Def sc → Set where
+    def    : DName sc (def x v) v
+
+    inside : (w : WkDef wk1 v' v) (n : DsName sc ds v)
+           → DName sc (def x (modl ds)) v'
+
+    imp    : (w : WkDef wk1 v' v) (n : Name sc (modl ds)) (nds : DsName sc ds v)
+           → DName sc (opn n) v'
+
+  variable
+    nd nd' : DName  sc d  v
+
+  -- This finally allows us to define names resolving in a scope.
+
+  constructor  -- DsName
+    here  : (w : WkDef wk01 v v') (nd  : DName (sc ▷ ds) d v) → DsName sc (ds ▷ d) v'
+    there : (w : WkDef wk01 v v') (nds : DsName sc      ds v) → DsName sc (ds ▷ d) v'
+
+  constructor  -- Name
+    site   :                      (nds : DsName sc ds v) → Name (sc ▷ ds) v
+    parent : (w : WkDef wk1 v v') (n   : Name   sc    v) → Name (sc ▷ ds) v'
+
+  ------------------------------------------------------------------------
   -- Relating entities defined in a scope to their weakenings.
 
   data WkDecl  (τ : sc ⊆ sc') : Decl  sc → Decl  sc' → Set
 
   data WkDecls : (τ : sc ⊆ sc') → Decls sc → Decls sc' → Set
 
-  data WkDef   (τ : sc ⊆ sc') : Def sc   → Def sc'   → Set where
-    modl : (ws : WkDecls τ ds ds') → WkDef τ (modl ds) (modl ds')
-
-  variable
-    wv wv' wv₀ : WkDef τ v v'
-
   -- Weakenings are order-preserving embeddings.
 
   constructor  -- _⊆_
-    -- ε : ε ⊆ ε
-    -- refl : sc ⊆ sc
     refl-⊆ : sc ⊆ sc
     _▷_  : (τ : sc ⊆ sc') (ws : WkDecls τ ds ds') → (sc ▷ ds) ⊆ (sc' ▷ ds')
     _▷ʳ_ : (τ : sc ⊆ sc') (ds : Decls sc')        → sc        ⊆ (sc' ▷ ds)
 
   constructor  -- WkDecls
-    -- ε     : WkDecls τ ε ε
-    -- refl  : WkDecls refl ds ds
-    -- wkDecls-refl-⊆  : {ds : Decls sc} → WkDecls (refl-⊆ {sc = sc}) ds ds
     wkDecls-refl-⊆  : WkDecls refl-⊆ ds ds
     _▷_   : (ws : WkDecls τ ds ds') (w : WkDecl (τ ▷ ws) d d') → WkDecls τ (ds ▷ d) (ds' ▷ d')
     _▷ʳ_  : (ws : WkDecls τ ds ds') (d : Decl (_ ▷ ds'))       → WkDecls τ  ds      (ds' ▷ d)
 
-  -- refl-⊆ : sc ⊆ sc
+  -- We can now define the singleton weaknings.
 
-  -- We can prove that the identity weaking leaves a declarations and definitions unchanged.
+  -- By another list of declarations.
+  wk1 {ds = ds} = refl-⊆ ▷ʳ ds
 
-  wkDecl-refl-⊆  : WkDecl  refl-⊆ d  d
+  -- By a single declaration.
+  wk01 {d = d} = refl-⊆ ▷ (wkDecls-refl-⊆ ▷ʳ d)
 
-  -- wkDecls-refl-⊆ : WkDecls refl-⊆ ds ds
-  -- wkDecls-refl-⊆ {ds = ε}      = ε
-  -- wkDecls-refl-⊆ {ds = ds ▷ d} = wkDecls-refl-⊆ {ds = ds} ▷ {! wkDecl-refl-⊆ {d = d} !}
-  --   -- refl-⊆ != (refl-⊆ ▷ wkDecls-refl-⊆) of type ((ds.sc ▷ ds) ⊆ (ds.sc ▷ ds))
+  -- We can prove that the identity weaking leaves definitions unchanged.
+
+  constructor  -- WkDef
+    modl : (ws : WkDecls τ ds ds') → WkDef τ (modl ds) (modl ds')
 
   wkDef-refl-⊆   : WkDef   refl-⊆ v  v
   wkDef-refl-⊆ {v = modl ds} = modl wkDecls-refl-⊆
 
-  -- refl-⊆ {sc = ε}       = ε
-  -- refl-⊆ {sc = sc ▷ ds} = refl-⊆ {sc = sc} ▷ wkDecls-refl-⊆ {ds = ds}
-
-  -- Singleton weaknings.
-
-  -- By another list of declarations.
-  wk1 : sc ⊆ (sc ▷ ds)
-  wk1 {ds = ds} = refl-⊆ ▷ʳ ds
-
-  -- By a single declaration.
-  wk01 : (sc ▷ ds) ⊆ (sc ▷ (ds ▷ d))
-  wk01 {d = d} = refl-⊆ ▷ (wkDecls-refl-⊆ ▷ʳ d)
-
-  -- Names resolving in a declaration or a list of declarations.
-
-  data DsName (sc : Scope) : (ds : Decls sc) → Def (sc ▷ ds) → Set -- where
-  data DName  (sc : Scope) : Decl sc → Def sc → Set -- where
-
-  variable
-    nds nds' : DsName sc ds v
-    nd  nd'  : DName  sc d  v
-
-  -- This allows us to define names resolving in a scope
-
-  constructor  -- ScName
-    site   :                      (n : DsName sc ds v) → ScName (sc ▷ ds) v
-    parent : (w : WkDef wk1 v v') (n : ScName sc    v) → ScName (sc ▷ ds) v'
-
   -- Weakning names
 
-  data WkScName : (τ : sc ⊆ sc') (w : WkDef τ v v') → ScName sc v → ScName sc' v' → Set
+  data WkName : (τ : sc ⊆ sc') (w : WkDef τ v v') → Name sc v → Name sc' v' → Set
 
   constructor  -- WkDecl
-    def  : (w : WkDef     τ    v   v'  ) → WkDecl τ (def x v) (def x v')
-    opn  : (wn : WkScName τ wv nsc nsc') → WkDecl τ (opn nsc) (opn nsc')
+    def  : (w  : WkDef  τ    v v') → WkDecl τ (def x v) (def x v')
+    opn  : (wn : WkName τ wv n n') → WkDecl τ (opn n)   (opn n')
 
-  wkScName-refl-⊆ : WkScName refl-⊆ wkDef-refl-⊆ nsc nsc
+  wkName-refl-⊆ : WkName refl-⊆ wkDef-refl-⊆ n n
 
+  wkDecl-refl-⊆  : WkDecl  refl-⊆ d  d
   wkDecl-refl-⊆ {d = def x v} = def wkDef-refl-⊆
-  wkDecl-refl-⊆ {d = opn nsc} = opn wkScName-refl-⊆
+  wkDecl-refl-⊆ {d = opn n  } = opn wkName-refl-⊆
 
-  constructor  -- DsName
-    here  : (w : WkDef wk01 v v') (n : DName (sc ▷ ds) d v) → DsName sc (ds ▷ d) v'
-    there : (w : WkDef wk01 v v') (n : DsName sc      ds v) → DsName sc (ds ▷ d) v'
+  constructor  -- WkName
+    site   : WkName τ wv (site nds) (site nds')              -- TODO WkDsName
+    -- parent : (w : WkName τ {!!} n n') → WkName τ wv₀ (parent wv n) (parent wv' n')  -- TODO
 
-  constructor  -- DName
-    def    : DName sc (def x v) v
-
-    inside : (w : WkDef wk1 v' v) (n : DsName sc ds v)
-           → DName sc (def x (modl ds)) v'
-
-    imp    : (w : WkDef wk1 v' v) (nsc : ScName sc (modl ds)) (nds : DsName sc ds v)
-           → DName sc (opn nsc) v'
-
-  constructor  -- WkScName
-    site   : WkScName τ wv (site nds) (site nds')              -- TODO WkDsName
-    -- parent : (w : WkScName τ {!!} nsc nsc') → WkScName τ wv₀ (parent wv nsc) (parent wv' nsc')  -- TODO
-
-  wkScName-refl-⊆ {nsc = nsc} = {!!}
+  wkName-refl-⊆ {n = n} = {!!}
