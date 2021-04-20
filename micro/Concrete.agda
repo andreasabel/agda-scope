@@ -7,9 +7,13 @@ module Concrete where
 
 open import HierMod.AST public -- Export AST
 
--- Decls = List Decl
+-- -- open import Library using (module String) renaming (_≟_ to _==_)
 
--- open import Library using (module String) renaming (_≟_ to _==_)
+-- Access modifiers (private/public).
+
+data Access : Set where
+  publ : Access  -- Public access (from everywhere).  Exported.
+  priv : Access  -- Private access only from within the module and its parents. Not Exported.
 
 -- Concatenation of qualified names.
 -- _◇_ is chosen to represent the Semigroup operation (<>) of Haskell.

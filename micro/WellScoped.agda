@@ -5,15 +5,9 @@
 
 open import Library; open Dec using (yes; no)
 import Concrete as C
-open C using (_◇_)
+open C using (_◇_; Access); open Access
 
 module WellScoped where
-
--- Access modifiers (private/public).
-
-data Access : Set where
-  publ : Access  -- Public access (from everywhere).  Exported.
-  priv : Access  -- Private access only from within the module and its parents. Not Exported.
 
 variable
   p p' : Access
@@ -294,10 +288,14 @@ mutual
     → List (SName p' xs' sc')
     → List (SName p' xs' sc')
   -- C.ref does not declare a name.
-  clookup τ p xs (C.opn q C.importNothing) f ns = ns
+  clookup τ p    xs (C.opn q C.importNothing) f ns = ns
+  clookup τ publ xs (C.opn q C.importPrivate) f ns = ns
+  -- We don't really want to commit when we are lookin up the module.
+  clookup τ priv xs (C.opn q C.importPrivate) f ns = {!slookup priv (q ◇ xs) ?!}
+  clookup τ p    xs (C.opn q C.importPublic ) f ns = {!!}
   -- Step inside private blocks.
   clookup τ publ xs (C.priv _ ) f ns = ns
-  clookup τ priv xs (C.priv ps) f ns = lclookup τ priv xs ps (f ∘ map inpriv) ns
+  clookup τ priv xs (C.priv ps) f ns = lclookup τ priv xs ps (f ∘ map inPriv) ns
   -- Resolve CName.
   clookup τ p (C.qName x) (C.modl y ss) f ns with x C.≟ y
   clookup τ p (C.qName x) (C.modl x ss) f ns | yes!  = f (modl x ∷ [])
@@ -325,13 +323,26 @@ mutual
 
   -- Lookup in the scope
 
-  sclookup : ∀ p xs sc → List (SName p xs sc)
+{-
+  sclookup' : ∀ p xs sc (τ : sc ⊆ sc') → List (SName p xs sc') → List (SName p xs sc')
   -- List exhausted
-  sclookup p xs [] = []
+  sclookup' p xs [] [] ns = ns
+  sclookup' p xs sc (y ∷ʳ τ) ns = map parent (sclookup' p xs sc τ {!!})
+  sclookup' p xs (ss ∷ sc) (refl ∷ τ) ns = lclookup (refl ∷ τ) p xs ss (map (wkSName {!!} ∘ site ∘ wkLName (refl ∷ τ))) (map {!parent!} (sclookup' p xs sc {!!} ns))
   -- In head?, in tail?
-  sclookup p xs (ss ∷ sc) = lclookup (_ ∷ʳ ⊆-refl) p xs ss (map site) (map parent (sclookup p xs sc))
+  -- sclookup' p xs (ss ∷ sc) τ ns = {!!}
+  -- lclookup τ p xs ss (map (site ∘ wkLName {!!})) (map {!parent!} (sclookup' p xs sc {!!} ns))
     -- only keep parent alternatives when current site does not resolve the name
     -- discard parent occurrences if current site has one
+-}
+
+sclookup : ∀ p xs sc → List (SName p xs sc)
+-- List exhausted
+sclookup p xs [] = []
+-- In head?, in tail?
+sclookup p xs (ss ∷ sc) = lclookup (_ ∷ʳ ⊆-refl) p xs ss (map site) (map parent (sclookup p xs sc))
+  -- only keep parent alternatives when current site does not resolve the name
+  -- discard parent occurrences if current site has one
 
 -- Well-scoped declarations
 

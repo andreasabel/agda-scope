@@ -37,12 +37,12 @@ mutual
   checkDecl : (d : C.Decl) (sc : Scope) → M (A.Decl sc d)
 
   -- Agda <= 2.6.1 style: current site may not shadow parents
-  checkDecl (C.opn xs dir) sc with slookupAll priv xs sc
+  checkDecl (C.opn xs dir) sc with slookupAll C.priv xs sc
   ... | enum (n ∷ [])       _ = return (opn n dir)
   ... | enum []            ¬n = fail (notInScope λ n → case ¬n n of λ())
   ... | enum (n₁ ∷ n₂ ∷ ns) _ = fail (ambiguous n₁ n₂ ns)
   -- -- ALT: current site may shadow parents
-  -- checkDecl (C.opn xs dir) sc with sclookup priv xs sc
+  -- checkDecl (C.opn xs dir) sc with sclookup C.priv xs sc
   -- ... | (n ∷ [])       = return (opn n dir)
   -- ... | []             = fail (notInScope' xs)
   -- ... | (n₁ ∷ n₂ ∷ ns) = fail (ambiguous n₁ n₂ ns)
@@ -52,7 +52,7 @@ mutual
   -- ... | yes n = fail (shadows n)
   -- ... | no  _ = do
   -- ALT shadowing rules: x must not be in scope in current site
-  checkDecl (C.modl x ds) sc with slookup priv (C.qName x) sc
+  checkDecl (C.modl x ds) sc with slookup C.priv (C.qName x) sc
   ... | (site n ∷ _) = fail (shadows (site {sc = sc} (wk1LName n) ))
   ... | _            = modl x <$> checkDecls ds sc
 
