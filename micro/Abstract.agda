@@ -63,8 +63,12 @@ interleaved mutual
     _▷_ : (ds : Decls sc) (d : Decl (sc ▷ ds)) → Decls sc
 
   constructor -- Val
+    -- The content of a module.
     content : (ds : Decls sc) → Val sc
+    -- Qualifying a value that is taken from inside module x.
     inside  : (x : C.Name) (v : Val ((sc ▷ ds) ▷ ds')) → Val (sc ▷ (ds ▷ modl x ds'))
+    imp     : (n : Name (sc ▷ ds₀) (content ds')) (v : Val ((sc ▷ ds₀) ▷ ds'))
+            → Val (sc ▷ (ds₀ ▷ opn n))
 
   -- Weakning from one scope to an extended scope.
 
@@ -110,8 +114,8 @@ interleaved mutual
              (n : DsName (sc ▷ ds₀) ds' v)
            → DName sc ds₀ (modl x ds') (inside x v)
 
-    -- imp    : (w : WkVal wk1 v' v) (n : Name (sc ▷ ds₀) (modl ds')) (nds : DsName (sc ▷ ds₀) ds' v)
-    --        → DName sc ds₀ (opn n) {!v'!}
+    imp    : (n : Name (sc ▷ ds₀) (content ds')) (nds : DsName (sc ▷ ds₀) ds' v)
+           → DName sc ds₀ (opn n) (imp n v)
 
   variable
     nd nd' : DName sc ds d  v
@@ -151,16 +155,6 @@ interleaved mutual
   -- By a single declaration.
   wk01 {d = d} = refl-⊆ ▷ (wkDecls-refl-⊆ ▷ʳ d)
 
-  -- We can prove that the identity weaking leaves definitions unchanged.
-
-  constructor  -- WkVal
-    content : (ws : WkDecls τ ds ds') → WkVal τ (content ds) (content ds')
-    inside  : (wv : WkVal   τ v  v' ) → WkVal τ (inside x v) (inside x v')
-
-  wkVal-refl-⊆   : WkVal   refl-⊆ v  v
-  wkVal-refl-⊆ {v = content ds} = content wkDecls-refl-⊆
-  wkVal-refl-⊆ {v = inside x v} = inside  (wkVal-refl-⊆ {v = v})
-
   -- Weakning names
 
   data WkName : (τ : sc ⊆ sc') (w : WkVal τ v v') → Name sc v → Name sc' v' → Set
@@ -169,11 +163,21 @@ interleaved mutual
     def  : (w  : WkDecls τ    ds ds') → WkDecl τ (modl x ds) (modl x ds')
     opn  : (wn : WkName  τ wv n  n' ) → WkDecl τ (opn n)   (opn n')
 
+  wkVal-refl-⊆   : WkVal   refl-⊆ v  v
   wkName-refl-⊆ : WkName refl-⊆ wkVal-refl-⊆ n n
 
   wkDecl-refl-⊆  : WkDecl  refl-⊆ d  d
   wkDecl-refl-⊆ {d = modl x ds} = def wkDecls-refl-⊆
   wkDecl-refl-⊆ {d = opn n    } = opn wkName-refl-⊆
+
+  -- We can prove that the identity weaking leaves definitions unchanged.
+
+  constructor  -- WkVal
+    content : (ws : WkDecls τ ds ds') → WkVal τ (content ds) (content ds')
+    inside  : (wv : WkVal ((τ ▷ wds) ▷ wds') v  v' ) → WkVal (τ ▷ (wds ▷ def wds')) (inside x v) (inside x v')
+
+  wkVal-refl-⊆ {v = content ds} = content wkDecls-refl-⊆
+  wkVal-refl-⊆ {v = inside x v} = {!inside  (wkVal-refl-⊆ {v = v})!}
 
   data WkDsName : (τ : sc ⊆ sc') (ws : WkDecls τ ds ds') (w : WkVal (τ ▷ ws) v v')
     → DsName sc ds v → DsName sc' ds' v' → Set
