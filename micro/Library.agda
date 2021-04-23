@@ -28,6 +28,9 @@ open import Data.List.Relation.Binary.Sublist.Propositional.Properties
 
 open import Data.List.NonEmpty                    public using (List⁺; _∷_; _∷⁺_)
 
+open import Data.Nat.Base                         public using (ℕ; zero; suc; _≤_)
+open import Data.Nat.Properties                   public using (≤-step; 1+n≰n)
+
 open import Function                              public using (id; _∘_; _∘′_; _$_; case_of_)
 open import Level                                 public using (_⊔_)
 
