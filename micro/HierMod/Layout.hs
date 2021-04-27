@@ -27,13 +27,13 @@ data LayoutDelimiters
     }
 
 layoutWords :: [(TokSymbol, LayoutDelimiters)]
-layoutWords     =
-  [   ( TokSymbol "where" 10
-      , LayoutDelimiters (TokSymbol ";" 4) (Just (TokSymbol "{" 11)) (Just (TokSymbol "}" 12))
-      )
-  ,   ( TokSymbol "private" 7
-      , LayoutDelimiters (TokSymbol ";" 4) (Just (TokSymbol "{" 11)) (Just (TokSymbol "}" 12))
-      )
+layoutWords =
+  [ ( TokSymbol "where" 10
+    , LayoutDelimiters (TokSymbol ";" 4) (Just (TokSymbol "{" 11)) (Just (TokSymbol "}" 12))
+    )
+  , ( TokSymbol "private" 7
+    , LayoutDelimiters (TokSymbol ";" 4) (Just (TokSymbol "{" 11)) (Just (TokSymbol "}" 12))
+    )
   ]
 
 layoutStopWords :: [TokSymbol]
@@ -41,22 +41,16 @@ layoutStopWords = []
 
 -- layout separators
 
-layoutTopSep :: TokSymbol
-layoutTopSep = undefined
-
 layoutOpen, layoutClose, layoutSep :: [TokSymbol]
 layoutOpen  = List.nub $ mapMaybe (delimOpen  . snd) layoutWords
 layoutClose = List.nub $ mapMaybe (delimClose . snd) layoutWords
-layoutSep   = List.nub $ layoutTopSep : map (delimSep . snd) layoutWords
+layoutSep   = List.nub $ map (delimSep . snd) layoutWords
 
 -- | Replace layout syntax with explicit layout tokens.
 resolveLayout :: Bool    -- ^ Whether to use top-level layout.
               -> [Token] -> [Token]
-resolveLayout topLayout =
-  res Nothing [if topLayout then Implicit topDelim Definitive 1 else Explicit]
+resolveLayout _topLayout = res Nothing [Explicit]
   where
-  topDelim :: LayoutDelimiters
-  topDelim = undefined
 
   res :: Maybe Token -- ^ The previous token, if any.
       -> [Block]     -- ^ A stack of layout blocks.
@@ -180,7 +174,8 @@ type Column   = Int
 
 -- | Entry of the layout stack.
 data Block
-   = Implicit LayoutDelimiters Status Column -- ^ An implicit layout block with its start column.
+   = Implicit LayoutDelimiters Status Column
+       -- ^ An implicit layout block with its start column.
    | Explicit
 
 -- | Get current indentation.  0 if we are in an explicit block.
