@@ -7,7 +7,7 @@
 # make BIN=./micmod-ghc-8.4.4 test
 
 BIN  = ./micmod
-AGDA = agda
+AGDA = agda-2.6.3
 
 ###########################################################################
 
@@ -51,8 +51,8 @@ test : micmod
 
 .PHONY: build
 build : $(genfiles)
-	$(AGDA) --compile --ghc-dont-call-ghc $(ghcflags) micmod.agda
-	hpack && cabal build -w ghc-9.0.1
+	$(AGDA) --compile --ghc-dont-call-ghc micmod.agda
+	hpack && cabal build
 
 # Just the parser
 
@@ -85,16 +85,6 @@ $(grammar)/Test.hs $(grammar)/Lex.x $(grammar)/Par.y $(genhsfiles) $(genagdafile
 $(grammar)/Test : $(grammar)/Test.hs $(grammar)/Par.hs $(grammar)/Lex.hs
 	ghc --make $< -o $@
 
-# Rules for shipping.
-
-sdist : core.tar.gz
-
-tmpdir := $(shell mktemp -d)
-core.tar.gz : $(files)
-	mkdir $(tmpdir)/core
-	cp $^ $(tmpdir)/core/
-	tar -C $(tmpdir) -czhf $@ core
-
 # Rules for cleaning generated files:
 
 clean :
@@ -103,6 +93,6 @@ clean :
 distclean : clean
 	-rm -f $(grammar)/Doc.* $(grammar)/Lex.* $(grammar)/Par.* $(grammar)/Layout.* $(grammar)/Skel.* $(grammar)/Print.* $(grammar)/Test.* $(grammar)/Abs.* $(grammar)/Test $(grammar)/ErrM.* $(grammar)/SharedString.* $(grammar)/ComposOp.* $(grammar)/$(grammar).dtd $(grammar)/XML.* $(grammar)/*.bak $(grammar)/AST.*
 	-rmdir -p $(grammar)/
-	-rm -f core.tar.gz core
+	rm -rf MAlonzo
 
 # EOF
