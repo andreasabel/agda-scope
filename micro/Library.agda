@@ -31,7 +31,8 @@ open import Data.List.NonEmpty                    public using (List⁺; _∷_; 
 open import Function                              public using (id; _∘_; _∘′_; _$_; case_of_)
 open import Level                                 public using (_⊔_)
 
-open import Relation.Binary.PropositionalEquality public using (_≡_; refl; cong)
+open import Relation.Binary.PropositionalEquality as Eq
+                                                  public using (_≡_; refl)
 open import Relation.Nullary                      public using (Dec; ¬_) hiding (module Dec)
 
 open import IO.Primitive      public using (IO)
@@ -57,14 +58,27 @@ module Dec where
   open        Relation.Nullary           public using (yes; no)
   open import Relation.Nullary.Decidable using (map′)
 
-  map : ∀{a b} {A : Set a} {B : Set b} {f : A → B} → Surjective f → Dec A → Dec B
-  map {f = f} surj = map′ f (proj₁ ∘ surj)
+  module _ {a b} {A : Set a}{B : Set b} {f : A → B} where
+
+    map : Surjective f → Dec A → Dec B
+    map surj = map′ f (proj₁ ∘ surj)
+
+    module _ (inj : Injective f) where
+
+      cong : ∀{x y} → Dec (x ≡ y) → Dec (f x ≡ f y)
+      cong = map′ (Eq.cong f) inj
+
+      cong⁻¹ : ∀{x y} → Dec (f x ≡ f y) → Dec (x ≡ y)
+      cong⁻¹ = map′ inj (Eq.cong f)
 
 pattern here! = here refl
 pattern yes!  = Dec.yes refl
 
 module String where
   open import Data.String.Base public
+  open import Data.String.Properties public
+    using    ()
+    renaming (<-strictTotalOrder-≈ to strictTotalOrder)
 
 -- import map after defining Dec.map
 open Data.List.Base public using (map)

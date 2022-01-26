@@ -24,17 +24,17 @@ qual x xs ◇ ys = qual x (xs ◇ ys)
 
 -- Injectivity and decidability.
 
-module _ {a b} {A : Set a}{B : Set b} where
+-- module _ {a b} {A : Set a}{B : Set b} where
 
-  module _ {f : A → B} (inj : Injective f) where
+--   module _ {f : A → B} (inj : Injective f) where
 
-    congDec : ∀{x y} → Dec (x ≡ y) → Dec (f x ≡ f y)
-    congDec yes!    = yes!
-    congDec (no ¬p) = no (¬p ∘ inj)
+--     congDec : ∀{x y} → Dec (x ≡ y) → Dec (f x ≡ f y)
+--     congDec yes!    = yes!
+--     congDec (no ¬p) = no (¬p ∘ inj)
 
-    injDec : ∀{x y} → Dec (f x ≡ f y) → Dec (x ≡ y)
-    injDec (yes p) = yes (inj p)
-    injDec (no ¬p) = no (¬p ∘ cong f)
+--     injDec : ∀{x y} → Dec (f x ≡ f y) → Dec (x ≡ y)
+--     injDec (yes p) = yes (inj p)
+--     injDec (no ¬p) = no (¬p ∘ cong f)
 
 injName : Injective name
 injName refl = refl
@@ -43,7 +43,7 @@ postulate
   injStringFromList : Injective String.fromList
 
 _≟_ : (x y : Name) → Dec (x ≡ y)
-name x ≟ name y = congDec injName $ x == y
+name x ≟ name y = Dec.cong injName $ x == y
   -- congDec injName $
   -- injDec injStringFromList $
   -- String.fromList x == String.fromList y
