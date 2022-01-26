@@ -1,0 +1,28 @@
+Prg.   Program ::= "interleaved" "mutual" "{" Decls "}" ;
+layout "mutual";
+
+Sg.    Decls ::= Decl ;
+Snoc.  Decls ::= Decls ";" Decl ;
+
+Sig.   Decl ::= Ident ":" Ty ;
+Def.   Decl ::= Ident "=" Exp ;
+
+-- Types are simple types with base type Set
+
+TSet.  Ty1 ::= "Set";
+TId.   Ty1 ::= Ident;
+TArr.  Ty  ::= Ty1 To Ty;
+
+coercions Ty 1;
+
+-- Expressions are applicative.
+
+EId.   Exp1 ::= Ident;
+EApp.  Exp  ::= Exp Exp1;
+
+coercions Exp 1;
+
+token To ({"->"} | '→');
+
+comment "--" ;
+comment "{-" "-}" ;

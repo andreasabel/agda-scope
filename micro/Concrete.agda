@@ -24,9 +24,6 @@ qual x xs ◇ ys = qual x (xs ◇ ys)
 injName : Injective name
 injName refl = refl
 
-postulate
-  injStringFromList : Injective String.fromList
-
 _≟_ : (x y : Name) → Dec (x ≡ y)
 name x ≟ name y = Dec.cong injName $ x == y
 

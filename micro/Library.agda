@@ -7,7 +7,7 @@ open import Category.Applicative                  public using (RawApplicative)
 open import Category.Monad                        public using (RawMonad) -- ; return; _>>=_)
 
 open import Data.Unit                             public using (⊤)
-open import Data.Product                          public using (Σ; ∃; _,_; proj₁; proj₂)
+open import Data.Product                          public using (Σ; ∃; _×_; _,_; proj₁; proj₂)
 
 open import Data.Empty                            public using (⊥; ⊥-elim)
 open import Data.Sum                              public using (_⊎_; inj₁; inj₂; [_,_]′)

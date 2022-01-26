@@ -1,0 +1,47 @@
+name:      agda-scope-mutual
+version:   0.0.20220125
+synopsis:  A scope checker for a microscopic fragment of Agda in Agda
+license:   BSD-3-Clause
+author:    Andreas Abel <andreas.abel@gu.se>
+category:  Dependent types
+
+# hpack version
+spec-version: 0.34.3
+
+tested-with:
+  # GHC == 7.8.4 would require dependency for Data.Bifunctor (not in base there)
+  - GHC == 7.10.3
+  - GHC == 8.0.2
+  - GHC == 8.2.2
+  - GHC == 8.4.4
+  - GHC == 8.6.5
+  - GHC == 8.8.4
+  - GHC == 8.10.4
+  - GHC == 9.0.1
+  - GHC == 9.2.1
+
+dependencies:
+  - base >= 4.3 && < 5
+
+# ghc-options: -Wall
+
+library:
+  # files in MAlonzo/Code are qualified modules
+  # files in HierMod are qualified modules
+  source-dirs:     .
+  exposed-modules: MAlonzo.Code.Qmut
+  dependencies:
+    - array
+    - text
+
+  # exclude some modules
+  when:
+    condition: false
+    other-modules:
+      - Mutual.Skel
+      - Mutual.Test
+
+executable:
+  main:         Main.hs
+  source-dirs:  app
+  dependencies: agda-scope-mutual
