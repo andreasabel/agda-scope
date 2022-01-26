@@ -60,17 +60,19 @@ interleaved mutual
 
   -- A scope is a snoc list of lists of declarations.
 
-  constructor  -- Scope
+  data Scope where
     ε   : Scope
+
+  data Scope where
     _▷_ : (sc : Scope) (ds : Decls sc) → Scope
 
   -- Lists of declarations are also given in snoc-form.
 
-  constructor  -- Decls
+  data Decls where
     ε   : Decls sc
     _▷_ : (ds : Decls sc) (d : Decl (sc ▷ ds)) → Decls sc
 
-  constructor -- Val
+  data Val where
     -- The content of a module.
     content : (ds : Decls sc) → Val sc
     -- Qualifying a value that is taken from inside module x.
