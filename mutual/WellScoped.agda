@@ -91,4 +91,30 @@ wk1Clauses = map wk1Exp
 wk1Program : Program Γ → Program (Γ ▷ A)
 wk1Program P = decoMap wk1Clauses P ▷ []
 
+-- Decidability
+
+equalEntry : (x y : Entry Γ) → Dec (x ≡ y)
+equalEntry here here = yes refl
+equalEntry here (there y) = no λ()
+equalEntry (there x) here = no λ()
+equalEntry (there x) (there y) with equalEntry x y
+... | yes refl = yes refl
+... | no p = no λ{ refl → p refl }
+
+equalTy : (A B : Ty Γ) → Dec (A ≡ B)
+equalTy set set = yes refl
+equalTy set (def _) = no λ()
+equalTy set (arr _ _) = no λ()
+equalTy (def _) set = no λ()
+equalTy (def x) (def y) with equalEntry x y
+... | yes refl = yes refl
+... | no p = no λ{ refl → p refl }
+equalTy (def _) (arr _ _) = no λ()
+equalTy (arr _ _) set = no λ()
+equalTy (arr _ _) (def _) = no λ()
+equalTy (arr A A') (arr B B') with equalTy A B | equalTy A' B'
+... | yes refl | yes refl = yes refl
+... | yes refl | no q = no λ{ refl → q refl }
+... | no p | _ = no λ{ refl → p refl}
+
 -- -}

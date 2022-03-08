@@ -35,17 +35,6 @@ data Tm (Γ : Cxt) (B : Ty Γ) : Set where
 Clauses : (Γ : Cxt) → Ty Γ → Set
 Clauses Γ A = List (Tm Γ A)
 
--- data CxtDeco (Γ : Cxt) : (Δ : Cxt) (ρ : Γ ≤ Δ → Ty Δ → Set) → Set where
---   ε : CxtDeco Γ ε D
---   _▷_ : CxtDeco Γ Δ D → D → CxtDeco Γ (Δ ▷ A) D
-
--- Γ ≤ Δ → Tm Δ A → A ≤ B → Tm Γ B
--- (ρ : Γ ⇒ Δ)
--- Tm(ρ) : Tm Δ → Tm Γ
-
--- T A = A → Int
--- _∘_ : (A → B) → T B → T A
-
 data CxtDeco (Γ : Cxt) (D : Ty Γ → Set) : ∀ Δ → Γ ≤ Δ → Set where
 
   ε   : (ρ : Γ ≤ ε)

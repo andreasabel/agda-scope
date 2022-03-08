@@ -5,13 +5,17 @@ module TypeChecker where
 
 open import Library; open Dec using (yes; no)
 import WellScoped as A
-open import WellScoped using (Cxt; ε; _▷_; Γ; Δ; _≤_; ρ; Ty; A; B; wkTy)
+open import WellScoped using (Cxt; ε; _▷_; Γ; Δ; _≤_; ρ; Ty; A; B; wkTy; equalEntry; equalTy)
 open Cxt; open _≤_; open Ty
 open import WellTyped
 
 data TypeError : Set where
   functionExpected : _
   typeMismatch     : _
+
+printTypeError : TypeError → String
+printTypeError functionExpected = "function expected"
+printTypeError typeMismatch     = "type mismatch"
 
 -- Monad for the type checker
 
@@ -23,29 +27,6 @@ open RawApplicative {F = M} (applicative _ _) using () renaming (_⊛_ to _<*>_)
 open TraversableM {M = M} (monad _ _)
 
 pattern fail err = inj₁ err
-
-equalEntry : (x y : A.Entry Γ) → Dec (x ≡ y)
-equalEntry A.here A.here = yes refl
-equalEntry A.here (A.there y) = no λ()
-equalEntry (A.there x) A.here = no λ()
-equalEntry (A.there x) (A.there y) with equalEntry x y
-... | yes refl = yes refl
-... | no p = no λ{ refl → p refl }
-
-equalTy : (A B : Ty Γ) → Dec (A ≡ B)
-equalTy set set = yes refl
-equalTy set (def _) = no λ()
-equalTy set (arr _ _) = no λ()
-equalTy (def _) set = no λ()
-equalTy (def x) (def y) = {!!}
-equalTy (def _) (arr _ _) = no λ()
-equalTy (arr _ _) set = no λ()
-equalTy (arr _ _) (def _) = no λ()
-equalTy (arr A A') (arr B B') with equalTy A B | equalTy A' B'
-... | yes refl | yes refl = {!!}
-... | yes refl | no q = {!!}
-... | no p | yes refl = {!!}
-... | no p | no q = {!!}
 
 coerce : (t : Tm Γ A) (B : Ty Γ) → M (Tm Γ B)
 coerce {A = A} t B with equalTy A B
