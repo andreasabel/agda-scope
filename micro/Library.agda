@@ -7,7 +7,7 @@ open import Category.Applicative                  public using (RawApplicative)
 open import Category.Monad                        public using (RawMonad) -- ; return; _>>=_)
 
 open import Data.Unit                             public using (⊤)
-open import Data.Product                          public using (Σ; ∃; _×_; _,_; proj₁; proj₂)
+open import Data.Product                          public using (Σ; ∃; _×_; _,_; proj₁; proj₂; map₁; map₂) renaming (map to bimap)
 
 open import Data.Empty                            public using (⊥; ⊥-elim)
 open import Data.Sum                              public using (_⊎_; inj₁; inj₂; [_,_]′)
@@ -17,6 +17,7 @@ open import Data.Bool                             public using (Bool; true; fals
 open import Data.String                           public using (String; _≟_)
 
 open import Data.List.Base                        public using (List; []; _∷_; _++_)
+open import Data.List.Categorical                 public using (module TraversableM)
 open import Data.List.Membership.Propositional    public using (_∈_)
 open import Data.List.Membership.Propositional.Properties
                                                   public using (∈-map⁺; ∈-++⁺ˡ; ∈-++⁺ʳ)

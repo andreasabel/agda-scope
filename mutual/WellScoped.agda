@@ -11,7 +11,7 @@ interleaved mutual
   data Ty (Γ : Cxt) : Set
 
   variable
-    Γ : Cxt
+    Γ Δ : Cxt
     A B C : Ty Γ
 
   data Cxt where
@@ -61,10 +61,25 @@ decoMap f (Δ ▷ d) = decoMap f Δ ▷ f d
 
 -- Weakening
 
-wk1Ty : Ty Γ → Ty (Γ ▷ A)
-wk1Ty set = set
-wk1Ty (def x) = def (there x)
-wk1Ty (arr s t) = arr (wk1Ty s) (wk1Ty t)
+mutual
+  data _≤_ : (Γ Δ : Cxt) → Set where
+    wid  : Γ ≤ Γ
+    _▷ˡ_ : (ρ : Γ ≤ Δ) (A : Ty Γ) → (Γ ▷ A) ≤ Δ
+    -- _▷_  : (ρ : Γ ≤ Δ) (A : Ty Δ) → (Γ ▷ wkTy ρ A) ≤ (Δ ▷ A)
+
+  variable
+    ρ : Γ ≤ Δ
+
+  wkEntry : (ρ : Γ ≤ Δ) → Entry Δ → Entry Γ
+  wkEntry wid      x         = x
+  wkEntry (ρ ▷ˡ _) x         = there (wkEntry ρ x)
+  -- wkEntry (ρ ▷  _) here      = here
+  -- wkEntry (ρ ▷  _) (there x) = there (wkEntry ρ x)
+
+  wkTy : (ρ : Γ ≤ Δ) → Ty Δ → Ty Γ
+  wkTy ρ set = set
+  wkTy ρ (def x) = def (wkEntry ρ x)
+  wkTy ρ (arr A B) = arr (wkTy ρ A) (wkTy ρ B)
 
 wk1Exp : Exp Γ → Exp (Γ ▷ A)
 wk1Exp (def x) = def (there x)
@@ -75,3 +90,5 @@ wk1Clauses = map wk1Exp
 
 wk1Program : Program Γ → Program (Γ ▷ A)
 wk1Program P = decoMap wk1Clauses P ▷ []
+
+-- -}
