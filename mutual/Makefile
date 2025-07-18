@@ -2,7 +2,7 @@
 
 # Makefile for building the parser and test program.
 
-AGDA       = agda-2.6.3
+AGDA       = agda
 GHC        = ghc
 HAPPY      = happy
 HAPPY_OPTS = --array --info --ghc --coerce

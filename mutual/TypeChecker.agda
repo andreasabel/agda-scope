@@ -22,8 +22,8 @@ printTypeError typeMismatch     = "type mismatch"
 M : Set → Set
 M = TypeError ⊎_
 
-open RawMonad {M = M} (monad _ _)
-open RawApplicative {F = M} (applicative _ _) using () renaming (_⊛_ to _<*>_)
+open RawMonad {F = M} (monad _ _)
+-- open RawApplicative {F = M} (applicative _ _) using () renaming (_⊛_ to _<*>_)
 open TraversableM {M = M} (monad _ _)
 
 pattern fail err = inj₁ err

@@ -37,8 +37,8 @@ SProgram Γ = Scope Γ × Program Γ
 M : Set → Set
 M = ScopeError ⊎_
 
-open RawMonad {M = M} (monad _ _)
-open RawApplicative {F = M} (applicative _ _) using () renaming (_⊛_ to _<*>_)
+open RawMonad {F = M} (monad _ _)
+-- open RawApplicative {F = M} (applicative _ _) using () renaming (_⊛_ to _<*>_)
 
 pattern fail err = inj₁ err
 
