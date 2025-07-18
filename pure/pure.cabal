@@ -32,6 +32,7 @@ tested-with:
     GHC == 9.0.1
 
 library
+    hs-source-dirs:     src
     exposed-modules:
         HierMod.Abs
         HierMod.ErrM
@@ -43,6 +44,10 @@ library
 
     -- Modules included in this library but not exported.
     -- other-modules:
+
+    default-language:   Haskell2010
+    default-extensions:
+        TypeOperators
     other-extensions:
         CPP
         DefaultSignatures
@@ -61,25 +66,25 @@ library
         TypeSynonymInstances
 
     build-depends:
-        base           >=4.9
-      , array         ^>=0.5
-      , containers    ^>=0.6
-      , microlens     ^>=0.4
-      , microlens-mtl ^>=0.2
-      , microlens-th  ^>=0.4
-      , mtl           ^>=2.2.2
-      , pretty        ^>=1.1
-      , transformers  ^>=0.5.6.2
+        base          >=4.9
+      , array         >=0.5
+      , containers    >=0.6
+      , microlens     >=0.4
+      , microlens-mtl >=0.2
+      , microlens-th  >=0.4
+      , mtl           >=2.2.2
+      , pretty        >=1.1
+      , transformers  >=0.5.6.2
 
-    hs-source-dirs:     src
     build-tool-depends: alex:alex, happy:happy
-    default-language:   Haskell2010
 
 executable pure
     main-is:          Main.hs
     build-depends:    base , pure
     hs-source-dirs:   .
     default-language: Haskell2010
+    default-extensions:
+      TypeOperators
 
 -- test-suite pure-test
 --     default-language: Haskell2010
