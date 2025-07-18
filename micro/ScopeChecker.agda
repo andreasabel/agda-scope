@@ -27,7 +27,7 @@ printScopeError (ambiguous  {xs = xs} n₁ n₂ ns) = "ambiguous name: " String.
 M : Set → Set
 M = ScopeError ⊎_
 
-open RawMonad {M = M} (monad _ _)
+open RawMonad {F = M} (monad _ _)
 
 pattern fail err = inj₁ err
 

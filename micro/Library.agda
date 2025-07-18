@@ -2,22 +2,22 @@
 
 module Library where
 
-open import Category.Functor                      public using (RawFunctor)
-open import Category.Applicative                  public using (RawApplicative)
-open import Category.Monad                        public using (RawMonad) -- ; return; _>>=_)
+open import Effect.Functor                        public using (RawFunctor)
+open import Effect.Applicative                    public using (RawApplicative)
+open import Effect.Monad                          public using (RawMonad) -- ; return; _>>=_)
 
-open import Data.Unit                             public using (⊤)
-open import Data.Product                          public using (Σ; ∃; _×_; _,_; proj₁; proj₂; map₁; map₂) renaming (map to bimap)
+open import Data.Unit.Base                        public using (⊤)
+open import Data.Product.Base                     public using (Σ; ∃; _×_; _,_; proj₁; proj₂; map₁; map₂) renaming (map to bimap)
 
 open import Data.Empty                            public using (⊥; ⊥-elim)
-open import Data.Sum                              public using (_⊎_; inj₁; inj₂; [_,_]′)
-open import Data.Sum.Categorical.Left             public using (functor; applicative; monad)
+open import Data.Sum.Base                         public using (_⊎_; inj₁; inj₂; [_,_]′)
+open import Data.Sum.Effectful.Left               public using (functor; applicative; monad)
 
-open import Data.Bool                             public using (Bool; true; false)
+open import Data.Bool.Base                        public using (Bool; true; false)
 open import Data.String                           public using (String; _≟_)
 
 open import Data.List.Base                        public using (List; []; _∷_; _++_)
-open import Data.List.Categorical                 public using (module TraversableM)
+open import Data.List.Effectful                   public using (module TraversableM)
 open import Data.List.Membership.Propositional    public using (_∈_)
 open import Data.List.Membership.Propositional.Properties
                                                   public using (∈-map⁺; ∈-++⁺ˡ; ∈-++⁺ʳ)
@@ -28,6 +28,7 @@ open import Data.List.Relation.Binary.Sublist.Propositional.Properties
                                                   public using ()
 
 open import Data.List.NonEmpty                    public using (List⁺; _∷_; _∷⁺_)
+open import Data.Maybe.Base                       public using (Maybe; nothing; just)
 
 open import Function                              public using (id; _∘_; _∘′_; _$_; case_of_)
 open import Level                                 public using (_⊔_)
@@ -36,7 +37,7 @@ open import Relation.Binary.PropositionalEquality as Eq
                                                   public using (_≡_; refl)
 open import Relation.Nullary                      public using (Dec; ¬_) hiding (module Dec)
 
-open import IO.Primitive      public using (IO)
+open import IO.Primitive.Core                     public using (IO)
 
 -- Injective functions
 
@@ -139,7 +140,7 @@ liftM2 {{app}} f ma mb = zipWith f ma mb
   where open RawApplicative app
 
 module IOMonad where
-  open import IO.Primitive public using (return; _>>=_)
+  open import IO.Primitive.Core public using (return; _>>=_)
 
   infixl 1 _>>_
 
